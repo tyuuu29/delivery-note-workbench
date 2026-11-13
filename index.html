@@ -339,6 +339,26 @@ td span.calc.range{color:#0f2740;background:#eef4fa}
   box-shadow:0 8px 24px rgba(11,32,51,.3);animation:tin .22s ease-out}
 .toast .tp.err{background:#b1261c}
 .toast .tp.ok{background:#0f7a45}
+/* 居中大号警告（2026-11-13 用户要求）：拦截类提示放页面正中，明显可见 */
+.toastC{position:fixed;left:50%;top:44%;transform:translate(-50%,-50%);z-index:100;display:flex;flex-direction:column;gap:10px;align-items:center;pointer-events:none}
+.toastC .tw{background:#b1261c;color:#fff;padding:16px 28px;border-radius:12px;font-size:16.5px;font-weight:700;line-height:1.5;
+  box-shadow:0 12px 40px rgba(11,32,51,.5);animation:tin .22s ease-out;max-width:78vw;text-align:center}
+/* 第四部分合同多选：下拉勾选面板（合同多时（如10个）chips 摆不下，2026-11-13） */
+.ctDrop{position:relative;display:inline-block}
+.ctDropBtn{display:inline-block;padding:4px 14px;border-radius:14px;background:#123a5f;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;user-select:none;line-height:1.6}
+.ctDropPanel{display:none;position:absolute;top:calc(100% + 6px);left:0;z-index:60;background:#fff;border:1px solid #c9d9e8;border-radius:10px;box-shadow:0 10px 30px rgba(11,32,51,.18);padding:8px;min-width:230px;max-height:280px;overflow:auto}
+.ctDropPanel.open{display:block}
+.ctOpt{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:7px;font-size:12.5px;color:#183247;cursor:pointer;font-weight:600;white-space:nowrap}
+.ctOpt:hover{background:#f0f6fb}
+.ctOpt .box{width:15px;height:15px;min-width:15px;border:1.5px solid #9db4c8;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;line-height:1}
+.ctOpt.on .box{background:#123a5f;border-color:#123a5f}
+.ctOpt.on .box::after{content:'✓'}
+.ctTag{display:inline-block;background:#e3eef8;color:#2b5d8c;border-radius:5px;padding:0 6px;font-size:11px;font-weight:700;line-height:1.6;vertical-align:middle}
+.palShared{border:1.5px solid #e8a13d !important;background:#fffdf7 !important}
+/* 打托统计数值高亮：大号加粗蓝数字 + 小字灰单位，文字多时数字一眼可辨（2026-11-13） */
+.palVal{font-weight:800;color:#0d5aa7;font-size:14.5px;font-variant-numeric:tabular-nums}
+.palValB{font-weight:800;color:#0d5aa7;font-size:16.5px;font-variant-numeric:tabular-nums}
+.palUnit{color:#7b8ea3;font-size:11px;font-weight:600}
 @keyframes tin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(255,255,255,.35);
   border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-1px}
@@ -499,6 +519,8 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
               <th style="min-width:160px" title="型号、款号、颜色、工艺、规格等属性填入本列">型号/颜色/规格</th>
               <th style="min-width:62px">整箱数</th>
               <th style="min-width:66px">单箱装量</th>
+              <th style="min-width:62px" title="第二种装箱组合的箱数（如 4件*3500+2件*3000 的 2箱，不是尾箱）">组合2箱数</th>
+              <th style="min-width:66px" title="第二种装箱组合的单箱装量（如 4件*3500+2件*3000 的 3000）">组合2装量</th>
               <th style="min-width:62px">尾箱数</th>
               <th style="min-width:66px">尾箱装量</th>
               <th class="calc" style="min-width:70px">总件数(箱)</th>
@@ -637,7 +659,7 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
       <button class="btn gold sm" id="btnSync2">⬇️ 从第一部分同步/刷新</button>
       <span class="syncbar" id="syncBar"></span>
     <button class="btn solid sm" id="btnAddRow2">➕ 添加空白行</button>
-    <button class="btn solid sm" id="btnCalcWeights" title="智能自动推导：①单箱净重=毛重-0.8；②尾箱箱规继承整箱；③尾箱毛重按数量等比折算；④尾箱净重=尾毛-0.8（支持全表或仅针对勾选行）" style="color:#0b72b9;border-color:#b8daf2;background:#f0f7fd;font-weight:600">⚡ 一键推导净重与尾箱</button>
+    <button class="btn solid sm" id="btnCalcWeights" title="智能自动推导：①单箱净重=毛重-0.8；②有尾箱的行：尾箱箱规继承整箱、尾箱毛重按装量等比折算、尾箱净重=尾毛-0.8；③有组合2的行：推导结果填进组合2箱规/毛重/净重列，不占尾箱列（支持全表或仅针对勾选行）" style="color:#0b72b9;border-color:#b8daf2;background:#f0f7fd;font-weight:600">⚡ 一键推导净重与尾箱</button>
     <button class="btn solid sm" id="btnRepair2" title="按「明细」列的装箱算式重新拆解整箱数/单箱装量/尾箱（只重建装箱字段；备注不参与；数量对不上只警告不自动改数）。勾选了行就只重算勾选行，否则重算当前筛选范围">🔁 按明细重算</button>
     <button class="btn solid sm" id="btnClearMeasure" title="只清掉仓库实测的尺寸与重量，行、合同号、品名都保留">🧹 清空实测值</button>
     <span class="sp"></span>
@@ -658,6 +680,8 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
           <th style="min-width:160px">备注</th>
           <th class="p1col" style="min-width:62px" title="来自第一部分：不含尾箱的整箱数">整箱数</th>
           <th class="p1col" style="min-width:66px" title="来自第一部分：每个整箱的装量">单箱装量</th>
+          <th class="p1col" style="min-width:62px" title="第二组整箱的箱数（如 4件*3500+2件*3000 的 2箱，不是尾箱）">组合2箱数</th>
+          <th class="p1col" style="min-width:66px" title="第二组整箱的单箱装量">组合2装量</th>
           <th class="tailcol" style="min-width:62px" title="来自第一部分：尾箱件数">尾箱数</th>
           <th class="tailcol" style="min-width:66px" title="来自第一部分：尾箱装量">尾箱装量</th>
           <th class="calc" style="min-width:70px">总件数(箱)</th>
@@ -665,6 +689,9 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
           <th style="min-width:120px">实测整箱尺寸(CM)</th>
           <th style="min-width:88px">实测整箱毛重(KG)</th>
           <th style="min-width:88px">实测整箱净重(KG)</th>
+          <th style="min-width:120px" title="组合2箱子的实测箱规（如 4件*3500+2件*3000 的 2箱×3000装），一键推导按装量等比折算，不占尾箱列">组合2箱规(CM)</th>
+          <th style="min-width:88px" title="组合2箱子的单箱毛重">组合2毛重(KG)</th>
+          <th style="min-width:88px" title="组合2箱子的单箱净重">组合2净重(KG)</th>
           <th style="min-width:120px">实测尾箱尺寸(CM)</th>
           <th style="min-width:88px">实测尾箱毛重(KG)</th>
           <th style="min-width:88px">实测尾箱净重(KG)</th>
@@ -762,7 +789,7 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
   </div>
   <div class="toolbar" id="p4Bar">
     <label class="lab">合同：
-      <select id="palCt" class="t" style="width:auto;max-width:220px"></select>
+      <span id="palCt" style="display:inline-flex;gap:6px;flex-wrap:wrap;max-width:560px"></span>
     </label>
     <button class="btn solid sm" id="palAdd">➕ 新建托</button>
     <button class="btn sm" id="palClear">🗑️ 清空</button>
@@ -851,6 +878,7 @@ tr.p3total-row td{background:#fafcff !important;border-top:2px solid #0f7a45 !im
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="toastC" id="toastC"></div>
 
 <script>
 /* =====================================================================
@@ -873,6 +901,17 @@ const uid = () => 'r' + Math.random().toString(36).slice(2, 9);
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 function toast(msg, type) {
+  /* type='warn'：拦截类警告，页面正中大字显示，停留更久（2026-11-13 用户要求） */
+  if (type === 'warn') {
+    const boxC = $('#toastC');
+    const dC = document.createElement('div');
+    dC.className = 'tw';
+    dC.textContent = msg;
+    boxC.appendChild(dC);
+    setTimeout(() => { dC.style.opacity = '0'; dC.style.transition = '.4s'; }, 4600);
+    setTimeout(() => dC.remove(), 5100);
+    return;
+  }
   const box = $('#toast');
   const d = document.createElement('div');
   d.className = 'tp' + (type ? ' ' + type : '');
@@ -893,6 +932,10 @@ function parseSize(str) {
   if (p.length === 3) {
     /* 单边超过 1000（cm/mm 都算不过来）不可能是纸箱尺寸，多半是装量数字混进来了 */
     if (p.some(n => n > 1000)) return null;
+    /* 单位统一 cm（2026-11-06 用户约定）：带 mm 标记，或三维都 ≥150（cm 纸箱最小边
+       几乎不可能 ≥150，而 mm 箱规通常都 ≥150）→ 按 mm 解析，÷10 换算返回 */
+    if (/mm/i.test(s0) && !/cm/i.test(s0)) return { l: p[0] / 10, w: p[1] / 10, h: p[2] / 10, mm: true };
+    if (p.every(n => n >= 150) && !/cm/i.test(s0)) return { l: p[0] / 10, w: p[1] / 10, h: p[2] / 10, mm: true };
     return { l: p[0], w: p[1], h: p[2] };
   }
   return null;
@@ -954,6 +997,13 @@ function parsePackingExpr(s, ctnsRef) {
     const seg = t.split('+');
     const a = seg[0].split('*').filter(x => x !== '');
     const b = seg[1].split('*').filter(x => x !== '');
+    if (a.length === 1 && b.length === 1) {
+      /* 纯数字两段（如 5000+5094，2026-11-13 用户约定）：每段 = 1箱×该装量，
+         共 2 件（箱），第二段进组合2（两组装量不同，不进尾箱列） */
+      const v1 = num(a[0]), v2 = num(b[0]);
+      if (!(v1 > 0) || !(v2 > 0)) return null;
+      return { full: 1, pcs: v1, full2: 1, pcs2: v2, tail: 0, tailpcs: 0, combo2: true, pure: true, len: 2, plus: 1 };
+    }
     if (a.length === 2 && b.length === 1) {
       let n1 = num(a[0]), n2 = num(a[1]);
       let tailpcs = num(b[0]);
@@ -972,14 +1022,81 @@ function parsePackingExpr(s, ctnsRef) {
       let n1 = num(a[0]), n2 = num(a[1]);
       let t1 = num(b[0]), t2 = num(b[1]);
       let full = n1, pcs = n2, tail = t1, tailpcs = t2;
-      /* 两段都带「件/箱」时，两段都是整箱组（如 4件*3500+2件*3000 = 4箱+2箱） */
-      const anchor2 = anchorPackingOrder(seg[1]);
-      if (anchor2) { tail = anchor2.full; tailpcs = anchor2.pcs; }
       if (anchor) { full = anchor.full; pcs = anchor.pcs; }
       else if (ctnsRef && (n2 === ctnsRef || n2 + t1 === ctnsRef)) { full = n2; pcs = n1; }
+      /* 第二段是「尾箱」还是「第二组整箱」？必须看原始（未剥单位）的段落：
+         - 带「尾」→ 尾箱（如 35*140+1尾*150）
+         - 箱数位置带「件/箱」且 两组箱数之和=件数参考 → 两组整箱（如 4件*3500+2件*3000
+           = 4箱×3500装 + 2箱×3000装，没有尾数；2026-11-06 用户约定，不能进尾箱列）
+         - 其余 → 尾箱组（沿用启发式） */
+      const rawB = (raw.replace(/[×✕xX]/g, '*').replace(/＋/g, '+').replace(/\s+/g, '').split('+')[1]) || '';
+      const mb = rawB.match(/^(\d+(?:\.\d+)?)(件|箱)?\*(\d+(?:\.\d+)?)(件|箱)?$/);
+      const bAnchored = mb && ((mb[2] && !mb[4]) || (mb[4] && !mb[2]));
+      const combo2 = bAnchored && !/尾/.test(rawB) &&
+        (!ctnsRef || full + num(mb[2] ? mb[1] : mb[3]) === ctnsRef);
+      if (combo2) {
+        return { full: full, pcs: pcs, full2: num(mb[2] ? mb[1] : mb[3]), pcs2: num(mb[2] ? mb[3] : mb[1]), tail: 0, tailpcs: 0, combo2: true, len: 4, plus: 1 };
+      }
+      const anchor2 = anchorPackingOrder(rawB);
+      if (anchor2) { tail = anchor2.full; tailpcs = anchor2.pcs; }
       return { full: full, pcs: pcs, tail: tail, tailpcs: tailpcs, len: 4, plus: 1 };
     }
     return null;
+  }
+  /* 多段式（plus>=2，如 130件*155+12件*150+50=22000）。2026-11-06 用户约定：
+     - 尾数限定 1 箱：纯数字段（无×）= 尾数 1箱×N；带「尾」的段按段内箱数；箱数=1 的段也是尾数
+     - 其余 n*m 段按顺序是装箱组合：第1组→整箱列，第2组→组合2列
+     - 组合超过 2 组只计入前 2 组，extraCombos 供 repairRow 提示人工核对 */
+  if (plus >= 2) {
+    const segsAll = t.split('+');
+    /* 全纯数字段（如 5000+4000+1094，无任何 *）：每段 = 1箱×该装量（2026-11-13 用户约定）。
+       前 2 段进整箱/组合2，第 3 段进尾箱（1箱），更多段只计前 3 段并标记人工核对 */
+    if (segsAll.every(function (sg) { return sg.split('*').filter(function (x) { return x !== ''; }).length === 1; })) {
+      const vals = segsAll.map(num).filter(function (v) { return v > 0; });
+      if (!vals.length) return null;
+      const res = { full: 1, pcs: vals[0], full2: 0, pcs2: 0, tail: 0, tailpcs: 0, combo2: false, pure: true, len: segsAll.length, plus: plus };
+      if (vals.length >= 2) { res.full2 = 1; res.pcs2 = vals[1]; res.combo2 = true; }
+      if (vals.length >= 3) { res.tail = 1; res.tailpcs = vals[2]; }
+      if (vals.length > 3) res.extraCombos = vals.length - 3;
+      return res;
+    }
+    const rawsAll = raw.replace(/[×✕xX]/g, '*').replace(/＋/g, '+').replace(/\s+/g, '').split(/[=＝]/)[0].split('+');
+    const combos = [];
+    let tail = 0, tailpcs = 0, extraCombos = 0, segCount = 0;
+    for (let i = 0; i < segsAll.length; i++) {
+      const sg = segsAll[i], rawSeg = rawsAll[i] || '';
+      const parts = sg.split('*').filter(x => x !== '');
+      if (!parts.length) continue;
+      segCount++;
+      if (parts.length === 1) {                       /* 纯数字段：尾数 1箱×N（多个纯数字段装量合并） */
+        const v = num(parts[0]);
+        if (v > 0) { tail = tail > 0 ? tail : 1; tailpcs += v; }
+        continue;
+      }
+      if (parts.length !== 2) return null;            /* 段内不是两数，整体放弃 */
+      let n1 = num(parts[0]), n2 = num(parts[1]);
+      if (!(n1 > 0) || !(n2 > 0)) return null;
+      if (/尾/.test(rawSeg)) { tail = n1; tailpcs = n2; continue; }
+      if (n1 === 1) { tail = 1; tailpcs = n2; continue; }   /* 箱数=1 的段也是尾数（尾数限定1箱） */
+      if (n2 === 1) { tail = 1; tailpcs = n1; continue; }
+      /* 段内单位定向：带「件/箱」的数字是箱数（如 12件*150 → 12箱×150装） */
+      const aSeg = anchorPackingOrder(rawSeg);
+      if (aSeg) combos.push([aSeg.full, aSeg.pcs]);
+      else combos.push([n1, n2]);
+    }
+    if (!combos.length) return null;
+    let full = combos[0][0], pcs = combos[0][1];
+    if (anchor) { full = anchor.full; pcs = anchor.pcs; }
+    let full2 = combos.length >= 2 ? combos[1][0] : 0;
+    let pcs2v = combos.length >= 2 ? combos[1][1] : 0;
+    if (combos.length > 2) extraCombos = combos.length - 2;
+    /* 件数参考校验：整体方向反了时（如 155*130+150*12+50）两组同时翻转 */
+    if (!anchor && ctnsRef > 0 && full + full2 + (tail > 0 ? tail : 0) !== ctnsRef) {
+      if (pcs + pcs2v + (tail > 0 ? tail : 0) === ctnsRef) {
+        full = [pcs, pcs = full][0]; full2 = [pcs2v, pcs2v = full2][0];
+      }
+    }
+    return { full: full, pcs: pcs, full2: full2, pcs2: full2 > 0 ? pcs2v : 0, tail: tail, tailpcs: tailpcs, combo2: full2 > 0, extraCombos: extraCombos, len: segCount, plus: plus };
   }
   return null;
 }
@@ -1044,21 +1161,39 @@ function repairRow(r) {
   const cand = [
     ['packing_detail', r.packing_detail],
     ['spec', r.spec],
-    ['product_name', r.product_name]
+    ['product_name', r.product_name],
+    /* 备注兜底（2026-11-13 用户约定）：部分送货单把装箱数据写在备注列（如 备注一=5000+5094），
+       仅当前面的字段都没有可解析的算式时才看备注，且纯数字算式必须有件数/数量佐证 */
+    ['remark', r.remark]
   ];
   let expr = null, from = '', src = '';
   for (const [k, v] of cand) {
     if (!v) continue;
     if (parseSize(v)) continue;
-    const reFormula = /(\d+\s*(?:件|箱|包|个|支|盒)?\s*[*×xX]\s*\d+(?:\s*[+＋]\s*(?:\d+\s*(?:件|箱|包|个|支|盒)?\s*[*×xX]\s*)?\d+)?(?:\s*[=＝]\s*\d+)?)/;
-    const m = String(v).match(reFormula);
+    /* 算式正则：支持任意段数——n*m 段之间用 + 连接，末尾允许纯数字段（如 130件*155+12件*150+50）。
+       单位词表必须含「尾」：否则 35*140+1尾*150 会被截断成 35*140+1，尾箱装量变成 1；
+       「尾数25」这类纯数字尾段也要能整段捕获。
+       旧版最多匹配 1 个加号，第三段起会被整体截掉（2026-11-06 用户反馈尾数提不进去）。
+       纯数字串兜底（如 5000+5094，整段无 *）：带 * 的正则匹配不到时再试，
+       要求至少 2 段纯数字用 + 连接，避免误抓普通数字。 */
+    const reFormula = /(\d+\s*(?:件|箱|包|个|支|盒)?\s*[*×xX]\s*\d+(?:\s*[+＋]\s*(?:尾数|尾箱|尾)?\s*(?:\d+\s*(?:尾数|尾箱|尾|件|箱|包|个|支|盒)?\s*[*×xX]\s*)?\d+)*(?:\s*[=＝]\s*\d+)?)/;
+    let m = String(v).match(reFormula);
+    if (!m && /[+＋]/.test(String(v))) {
+      const rePure = /(\d+(?:\s*[+＋]\s*\d+){1,4}(?:\s*[=＝]\s*\d+)?)/;
+      const mp = String(v).match(rePure);
+      if (mp) m = [mp[1], mp[1]];
+    }
     const toParse = m ? m[1] : v;
     if (parseSize(toParse)) continue;
     const e = parsePackingExpr(toParse, ctnsRef);
     if (!e) continue;
     const qtyRaw = has(r.qty_raw) ? num(r.qty_raw) : null;
-    const hitQty = qtyRaw != null && qtyRaw > 0 && Math.abs(e.full * e.pcs + e.tail * e.tailpcs - qtyRaw) < 0.5;
-    const hitCtn = ctnsRef > 0 && (e.full === ctnsRef || e.full + e.tail === ctnsRef);
+    const eQty = e.full * e.pcs + (e.combo2 ? e.full2 * e.pcs2 : 0) + e.tail * e.tailpcs;
+    const hitQty = qtyRaw != null && qtyRaw > 0 && Math.abs(eQty - qtyRaw) < 0.5;
+    const hitCtn = ctnsRef > 0 && (e.full === ctnsRef || e.full + (e.combo2 ? e.full2 : 0) + e.tail === ctnsRef);
+    /* 纯数字算式（如 5000+5094）结构上证据弱，单据上有件数/数量参考时必须命中其一才采信；
+       无任何参考时才直接采信。带 * 的算式沿用原有采信条件 */
+    if (e.pure && ((qtyRaw != null && qtyRaw > 0) || ctnsRef > 0) && !(hitQty || hitCtn)) continue;
     /* 带 + 或四段的算式本身已不可能是一个尺寸，可直接采信；两段的需要数量关系佐证 */
     if (!(e.plus > 0 || e.len >= 4 || hitQty || hitCtn)) continue;
     expr = e; from = k; src = String(toParse).trim(); break;
@@ -1066,9 +1201,22 @@ function repairRow(r) {
   if (expr) {
     r.full = expr.full; r.pcs = expr.pcs;
     r.tail = expr.tail; r.tailpcs = expr.tailpcs;
+    /* 两组整箱（如 4件*3500+2件*3000）：第二组存 full2/pcs2，尾箱列必须清空 */
+    if (expr.combo2) { r.full2 = expr.full2; r.pcs2 = expr.pcs2; }
+    else { r.full2 = ''; r.pcs2 = ''; }
     if (from === 'spec' && src) r.spec = String(r.spec).replace(src, '').replace(/^[·,，/\\()（）+=;\s]+|[·,，/\\()（）+=;\s]+$/g, '').trim();
-    notes.push('🔧 已按装箱算式 ' + src + ' 重算：' + expr.full + '整箱×' + expr.pcs +
+    notes.push('🔧 已按装箱算式 ' + src + (from === 'remark' ? '（取自备注）' : '') + ' 重算：' + expr.full + '整箱×' + expr.pcs +
+      (expr.combo2 ? ' + ' + expr.full2 + '整箱×' + expr.pcs2 : '') +
       (expr.tail ? ' + ' + expr.tail + '尾箱×' + expr.tailpcs : ''));
+    if (expr.extraCombos > 0) notes.push('⚠️ 算式含 ' + (expr.extraCombos + 2) + ' 组装箱组合，只计入前 2 组 + 尾数，其余请人工核对');
+    /* 第二部分行（存量字段 ctns/qty/tpcs）：repair 后同步重算，避免显示与实际脱节 */
+    if ('ctns' in r) {
+      r.tpcs = expr.tail ? expr.tailpcs : '';
+      const f2 = expr.combo2 ? num(expr.full2) : 0;
+      const p2v = f2 > 0 ? num(expr.pcs2) : 0;
+      r.ctns = num(r.full) + f2 + num(r.tail);
+      r.qty = num(r.full) * num(r.pcs) + f2 * p2v + num(r.tail) * (expr.tail ? expr.tailpcs : 0);
+    }
   }
 
   /* 纠错 2（已改为只警告不修正）：算式与单据合计对不上时，绝不自动改数 ——
@@ -1078,10 +1226,12 @@ function repairRow(r) {
   if (has(r.qty_raw) && num(r.qty_raw) > 0) {
     const qRaw = num(r.qty_raw);
     const f = num(r.full) || 0, p = num(r.pcs) || 0;
+    const f2 = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+    const p2v = f2 > 0 ? num(r.pcs2) : 0;
     const t = (has(r.tail) && num(r.tail) > 0 && has(r.tailpcs) && num(r.tailpcs) > 0) ? num(r.tail) : 0;
     const tp = (t > 0 && has(r.tailpcs)) ? num(r.tailpcs) : 0;
-    if (f > 0 && p > 0 && f * p + t * tp !== qRaw) {
-      r.qtyMismatch = { calcQty: f * p + t * tp, docQty: qRaw };
+    if (f > 0 && p > 0 && f * p + f2 * p2v + t * tp !== qRaw) {
+      r.qtyMismatch = { calcQty: f * p + f2 * p2v + t * tp, docQty: qRaw };
     }
   }
 
@@ -1091,9 +1241,14 @@ function repairRow(r) {
     r.pcs = Math.round(num(r.qty_raw || r.full) / num(r.ctns_raw));
   }
 
-  /* 纠错 4：外箱尺寸严谨性校验（长*宽*高 三维标准） */
+  /* 纠错 4：外箱尺寸严谨性校验（长*宽*高 三维标准）+ mm→cm 换算改写 */
   if (r.ctn_size) {
-    if (!parseSize(r.ctn_size)) {
+    const psRaw = String(r.ctn_size).trim();
+    const psMain = parseSize(psRaw);
+    if (psMain && psMain.mm) {
+      r.ctn_size = psMain.l + '*' + psMain.w + '*' + psMain.h;
+      notes.push('📏 箱规 ' + psRaw + ' 按 mm 识别，已换算为 cm：' + r.ctn_size);
+    } else if (!psMain) {
       const clean = String(r.ctn_size).trim().replace(/\s+/g, '').replace(/[×xX]/g, '*');
       const p2 = clean.split('*').map(x => parseFloat(x)).filter(n => isFinite(n) && n > 0);
       if (p2.length === 2) {
@@ -1105,8 +1260,10 @@ function repairRow(r) {
       r.ctn_size = '';
     }
   }
-  if (r.tail_size && !parseSize(r.tail_size)) {
-    r.tail_size = '';
+  if (r.tail_size) {
+    const ts = parseSize(r.tail_size);
+    if (ts && ts.mm) r.tail_size = ts.l + '*' + ts.w + '*' + ts.h;
+    else if (!ts) r.tail_size = '';
   }
 
   /* 纠错 5：已停用强制按整箱数除权校准单箱毛净重逻辑，避免单箱正常重（如20~30KG）被误减半 */
@@ -1420,7 +1577,7 @@ function blankRow(src, srcId, srcNo, thumb) {
   return {
     id: uid(), src: src || '', srcId: srcId || 'manual', srcNo: srcNo || 0, thumb: thumb || '',
     item_no: '', product_name: '', spec: '',
-    full: '', pcs: '', tail: '', tailpcs: '',
+    full: '', pcs: '', tail: '', tailpcs: '', full2: '', pcs2: '',
     ctn_size: '', gw: '', tail_size: '', tail_gw: '',
     nw: '', tail_nw: '', cbm_unit: '',
     cbm_raw: null, gw_raw: null, nw_raw: null, qty_raw: null, ctns_raw: null, remark: ''
@@ -1472,8 +1629,11 @@ function focusNewRow(id) {
 /* 单行核算：总件数、总数量、总毛重、立方数（支持尾数合箱：尾箱数为0时仍保留尾数装量） */
 function calc1(r) {
   const full = num(r.full), pcs = num(r.pcs), tail = num(r.tail), tpcs = num(r.tailpcs);
-  const ctns = full + tail;
-  let qty = full * pcs + (tail > 0 ? tail * tpcs : tpcs);
+  /* 第二组整箱（如 4件*3500+2件*3000 的 2箱×3000装）：计入箱数与数量，不算尾箱 */
+  const f2 = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+  const pcs2 = f2 > 0 ? num(r.pcs2) : 0;
+  const ctns = full + f2 + tail;
+  let qty = full * pcs + f2 * pcs2 + (tail > 0 ? tail * tpcs : tpcs);
   if (r.tailCombined === 'sub' && full === 0 && tail === 0 && tpcs === 0) {
     qty = (num(r._origFull) || 1) * pcs;
   }
@@ -1505,17 +1665,20 @@ function calc1(r) {
     cbm = full * (cbmOne || 0) + (tail > 0 ? tail * (tailCbmOne || 0) : 0);
     cbmSrc = 'calc';
   } else if (has(r.cbm_raw)) { cbm = num(r.cbm_raw); cbmSrc = 'raw'; }
-  return { ctns, full, tail, qty, gw, gwSrc, nw, nwSrc, cbm, cbmSrc, cbmOne, tailCbmOne };
+  return { ctns, full, full2: f2, pcs2: pcs2, tail, qty, gw, gwSrc, nw, nwSrc, cbm, cbmSrc, cbmOne, tailCbmOne };
 }
 
 /* 平衡核验：整箱×单箱装量 + 尾箱×尾箱装量 ?= 单据总数量（尾数合箱友好展示） */
 function balanceOf(r, c) {
   const full = num(r.full), pcs = num(r.pcs), tail = num(r.tail), tpcs = num(r.tailpcs);
+  const f2 = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+  const pcs2v = f2 > 0 ? num(r.pcs2) : 0;
   if (r.tailCombined === 'sub' && full === 0 && tail === 0 && tpcs === 0) {
     const orig = num(r._origFull) || 1;
     return { cls: 'ok', text: '✅ ' + (orig > 1 ? orig + '×' : '') + pcs + ' = ' + fmt0(c.qty) + ' (已并入主箱，计 0 箱)' };
   }
   let expr = full + '×' + pcs;
+  if (f2 > 0) expr += ' + ' + f2 + '×' + pcs2v;
   if (tail > 0) expr += ' + ' + tail + '×' + tpcs;
   else if (tpcs > 0) expr += ' + ' + tpcs + (r.tailCombined === 'sub' || (r.remark && (r.remark.includes('并入') || r.remark.includes('合入'))) ? '(并入主箱)' : '(合箱)');
   expr += ' = ' + fmt0(c.qty);
@@ -1532,7 +1695,10 @@ function balanceOf(r, c) {
   /* 数量对不上：不改数，只警告。差额能当尾数时直接告诉人该填什么 —— 数据仍由人手工补 */
   const diff = num(r.qty_raw) - c.qty;
   let hint = '';
-  if (tail === 0 && diff > 0 && diff < 100000 && (pcs <= 0 || diff < pcs * 2)) {
+  if (f2 > 0) {
+    /* 两组整箱行：差额不是漏读尾数，引导核对算式/合计本身 */
+    hint = ' —— 差额 ' + fmt0(diff) + '；本行为两组装箱（' + full + '箱×' + pcs + ' + ' + f2 + '箱×' + pcs2v + '），请核对单据合计或算式';
+  } else if (tail === 0 && diff > 0 && diff < 100000 && (pcs <= 0 || diff < pcs * 2)) {
     hint = ' —— 差额 ' + fmt0(diff) + ' 疑似漏读尾数；确认后请在「尾箱数」填 1、「尾箱装量」填 ' + fmt0(diff);
   } else if (tail === 0 && diff > 0 && pcs > 0 && diff % pcs === 0) {
     hint = ' —— 差额 ' + fmt0(diff) + ' = ' + (diff / pcs) + ' 箱，疑似漏读整箱数';
@@ -1686,6 +1852,8 @@ function render1() {
       inp('spec', r.spec, 'text') +
       inp('full', r.full, 'num') +
       inp('pcs', r.pcs, 'num') +
+      inp('full2', r.full2, 'num') +
+      inp('pcs2', r.pcs2, 'num') +
       inp('tail', r.tail, 'num') +
       inp('tailpcs', r.tailpcs, 'num') +
       '<td><span class="calc">' + (c.ctns ? fmt0(c.ctns) : '') + '</span></td>' +
@@ -2415,10 +2583,11 @@ $('#btnDelSel').onclick = async () => {
   updateTopActions();
   toast('已删除第二部分 ' + targets.length + ' 行装箱数据' + (selEnt.length ? ' 及 ' + selEnt.length + ' 项实测数据' : ''), 'ok');
 };
-/* 清空全部：第一、第二部分与上传图片队列全部彻底清空 */
+/* 清空全部：第一~第三部分与上传图片队列、实测数据全部清空；
+   第四部分打托数据（S.pal）保留——2026-11-13 用户约定：清空全部不连带清打托 */
 $('#btnClearAll').onclick = async () => {
   const n1 = S.rows.length, n2 = S.p2.length, nq = S.queue.length;
-  if (!n1 && !n2 && !nq) { toast('工作台当前已经是全新空白状态'); return; }
+  if (!n1 && !n2 && !nq) { toast('第一至第三部分当前已经是空白状态（第四部分打托数据不受影响）'); return; }
   const items = [];
   if (nq) items.push('批量上传区域：共 ' + nq + ' 张待处理/已提取图片');
   if (n1) {
@@ -2429,9 +2598,11 @@ $('#btnClearAll').onclick = async () => {
   }
   if (n2) items.push('第二部分：共 ' + n2 + ' 行装箱数据（含仓库实测值与合同号、产品名）');
   items.push('第三部分的合同汇总与图片队列会一并清空');
-  const ok = await askDelete('确认清空工作台全部数据与图片？', items,
-    '这会彻底清空上传的送货单图片、第一/第二/第三部分的全部表格数据及本机自动保存（API 配置会保留）：');
+  items.push('✅ 第四部分打托数据会保留，不受影响');
+  const ok = await askDelete('确认清空工作台数据与图片？（打托数据保留）', items,
+    '这会彻底清空上传的送货单图片、第一/第二/第三部分的全部表格数据及本机自动保存（API 配置、第四部分打托数据会保留）：');
   if (!ok) return;
+  const keepPal = S.pal;                    /* 打托数据摘出来，clearSaved 连带删档后回写 */
   S.rows = []; S.p2 = [];
   S.queue = []; S.qseq = 0; S.lastRowId = null;
   S.chk1 = []; S.chk2 = []; S.srcSel = []; S.sel = []; S.prodFilter = ''; S.onlyIssues = false;
@@ -2439,7 +2610,7 @@ $('#btnClearAll').onclick = async () => {
   const a2 = $('#chkAll2'); if (a2) a2.checked = false;
   const fi = $('#fileInput'); if (fi) fi.value = '';
   const wi = $('#whFileInput'); if (wi) wi.value = '';
-  
+
   /* 彻底清空仓库实测数据与录入抽屉 */
   ENT.items = []; ENT.parsed = false; ENT.files = [];
   const et = $('#entText'); if (et) et.value = '';
@@ -2448,8 +2619,10 @@ $('#btnClearAll').onclick = async () => {
   const ea = $('#entAll'); if (ea) ea.checked = false;
 
   clearSaved();
-  renderQueue(); render1(); render2(); render3(); renderMetrics1();
-  toast('已彻底清空全部图片、表格及实测数据，已重置为全新空白工作台', 'ok');
+  S.pal = keepPal;
+  persistNow();                             /* 立即回写存档：只含保留下来的打托数据等 */
+  renderQueue(); render1(); render2(); render3(); renderMetrics1(); renderP4();
+  toast('已清空图片、表格及实测数据；第四部分打托数据已保留', 'ok');
 };
 
 /* ---------------- Tab 切换 ---------------- */
@@ -2947,7 +3120,9 @@ function rescueTailByQty(r) {
   const full = num(r.full), pcs = num(r.pcs);
   if (full <= 0 || pcs <= 0) return;           /* 箱数/装量不完整，先不动 */
   const tail = num(r.tail), tpcs = num(r.tailpcs);
-  const calcQty = full * pcs + (tail > 0 && tpcs > 0 ? tail * tpcs : 0);
+  const f2 = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+  const p2v = f2 > 0 ? num(r.pcs2) : 0;
+  const calcQty = full * pcs + f2 * p2v + (tail > 0 && tpcs > 0 ? tail * tpcs : 0);
   if (calcQty !== qtyRaw) {
     r.qtyMismatch = { calcQty: calcQty, docQty: qtyRaw };
   }
@@ -3551,10 +3726,12 @@ function syncFromP1(silent) {
         existing.pcs = has(r.pcs) ? num(r.pcs) : '';
         existing.tail = num(r.tail);
         existing.tpcs = has(r.tailpcs) ? num(r.tailpcs) : '';
+        existing.full2 = num(r.full2) > 0 ? num(r.full2) : '';
+        existing.pcs2 = num(r.full2) > 0 && has(r.pcs2) ? num(r.pcs2) : '';
         existing.ctns = c.ctns;
         existing.qty = c.qty;
         // 尺寸与重量：若第二部分该行尚未手动填写，且第一部分有提取值，自动带入
-        const hasRealTail = num(r.tail) > 0 && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
+        const hasRealTail = (num(r.tail) > 0 || num(r.full2) > 0) && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
         if (!has(existing.size) && has(r.ctn_size)) existing.size = r.ctn_size;
         if (!has(existing.gw) && has(r.gw)) existing.gw = r.gw;
         if (!has(existing.nw) && has(r.nw)) existing.nw = r.nw;
@@ -3570,7 +3747,7 @@ function syncFromP1(silent) {
         }
         updatedCount++;
       } else {
-        const hasRealTail = num(r.tail) > 0 && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
+        const hasRealTail = (num(r.tail) > 0 || num(r.full2) > 0) && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
         S.p2.push({
           key: r.id || uid(),
           p1id: r.id,
@@ -3585,6 +3762,8 @@ function syncFromP1(silent) {
           pcs: has(r.pcs) ? num(r.pcs) : '',
           tail: num(r.tail),
           tpcs: has(r.tailpcs) ? num(r.tailpcs) : '',
+          full2: num(r.full2) > 0 ? num(r.full2) : '',
+          pcs2: num(r.full2) > 0 && has(r.pcs2) ? num(r.pcs2) : '',
           ctns: c.ctns,
           qty: c.qty,
           size: r.ctn_size || '',
@@ -3636,6 +3815,8 @@ function syncFromP1(silent) {
         pcs: has(r.pcs) ? num(r.pcs) : '',
         tail: num(r.tail),
         tpcs: has(r.tailpcs) ? num(r.tailpcs) : '',
+        full2: num(r.full2) > 0 ? num(r.full2) : '',
+        pcs2: num(r.full2) > 0 && has(r.pcs2) ? num(r.pcs2) : '',
         ctns: c.ctns,
         qty: c.qty,
         size: has(old.size) ? old.size : (r.ctn_size || ''),
@@ -3665,43 +3846,52 @@ function syncFromP1(silent) {
 function calc2(r, startCtn) {
   const ctns = num(r.ctns);
   const isSubMerged = r.tailCombined === 'sub' || String(r.remark || '').includes('已合入') || String(r.remark || '').includes('并入主箱') || String(r.remark || '').includes('尾箱并入') || String(r.remark || '').includes('合入');
+  /* 组合2（如 4件*3500+2件*3000 的 2箱×3000装）：计入箱数，但重量/体积按「第二组箱」单独口径 ——
+     单箱毛重字段对应的是组合1的箱子，组合2箱子只有填了尾箱重量(t_gw)才精算，否则不摊入（与第一部分口径一致） */
+  const full2 = (!isSubMerged && num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
   const tail = isSubMerged ? 0 : Math.min(Math.max(num(r.tail), 0), ctns);
-  const full = isSubMerged ? ctns : Math.max(ctns - tail, 0);
+  const full = isSubMerged ? ctns : Math.max(ctns - tail - full2, 0);
   const range = ctns > 0 ? (ctns === 1 ? String(startCtn) : startCtn + '-' + (startCtn + ctns - 1)) : '';
   /* 第二部分体积计算：
      1. 有整箱箱规与尾箱箱规：整箱体积 + 尾箱体积
      2. 只有整箱箱规（未填尾箱箱规）：仅按整箱计算 full * base
-     3. 无箱规但有单箱体积：按整箱/实际填入计算 */
+     3. 无箱规但有单箱体积：按整箱/实际填入计算
+     4. 组合2（2026-11-13）：用专属 c2_size 精算；旧数据（组合2箱规写在尾箱字段且无尾箱）兼容读取 t_size */
+  const realTail = tail > 0;                     /* isSubMerged 时 tail 已归 0 */
   const base = cbmOfSize(r.size);
-  const tsz = tail > 0 ? cbmOfSize(r.t_size) : null;
+  const tsz = realTail ? cbmOfSize(r.t_size) : null;
+  const c2SzOne = full2 > 0 ? ((cbmOfSize(r.c2_size) != null) ? cbmOfSize(r.c2_size) : (!realTail ? cbmOfSize(r.t_size) : null)) : null;
   const cbmOne = base != null ? base : (has(r.vol) ? num(r.vol) : null);
   let cbmAll = null;
-  if (base != null || tsz != null) {
+  if (base != null || tsz != null || c2SzOne != null) {
     const b = base != null ? base : 0;
     const t = tsz != null ? tsz : 0;
-    cbmAll = full * b + (tail > 0 ? tail * t : 0);
+    cbmAll = full * b + full2 * (c2SzOne || 0) + (tail > 0 ? tail * t : 0);
   } else if (has(r.vol)) {
-    cbmAll = (full + ((has(r.t_size) || has(r.t_gw)) && tail > 0 ? tail : 0)) * num(r.vol);
+    cbmAll = (full + full2 + (realTail && (has(r.t_size) || has(r.t_gw)) ? tail : 0)) * num(r.vol);
   }
 
-  /* 重量计算：
+  /* 重量计算（2026-11-13 起尾箱与组合2字段分离）：
      1. 有整箱和尾箱重量：整箱重量 + 尾箱重量 直接相加
-     2. 只有整箱重量（尾箱未填/无尾箱）：仅按整箱计算 full * gwF */
+     2. 只有整箱重量（尾箱未填/无尾箱）：仅按整箱计算 full * gwF
+     3. 组合2的箱子：用 c2_gw 精算；旧数据无尾箱时兼容读 t_gw；两者都没有则不摊（单箱毛重对应组合1的箱子） */
   const gwF = has(r.gw) ? num(r.gw) : null;
-  const gwT = (tail > 0 && has(r.t_gw)) ? num(r.t_gw) : 0;
+  const gwT = realTail && has(r.t_gw) ? num(r.t_gw) : null;
+  const gwC2 = full2 > 0 ? (has(r.c2_gw) && num(r.c2_gw) > 0 ? num(r.c2_gw) : (!realTail && has(r.t_gw) ? num(r.t_gw) : null)) : null;
   let gwAll = null;
-  if (gwF != null || (tail > 0 && has(r.t_gw))) {
-    gwAll = full * (gwF || 0) + (tail > 0 ? tail * gwT : 0);
+  if (gwF != null || gwT != null || gwC2 != null) {
+    gwAll = full * (gwF || 0) + full2 * (gwC2 || 0) + (tail > 0 ? tail * (gwT || 0) : 0);
   }
 
   const nwF = has(r.nw) ? num(r.nw) : null;
-  const nwT = (tail > 0 && has(r.t_nw)) ? num(r.t_nw) : 0;
+  const nwT = realTail && has(r.t_nw) ? num(r.t_nw) : null;
+  const nwC2 = full2 > 0 ? (has(r.c2_nw) && num(r.c2_nw) > 0 ? num(r.c2_nw) : (!realTail && has(r.t_nw) ? num(r.t_nw) : null)) : null;
   let nwAll = null;
-  if (nwF != null || (tail > 0 && has(r.t_nw))) {
-    nwAll = full * (nwF || 0) + (tail > 0 ? tail * nwT : 0);
+  if (nwF != null || nwT != null || nwC2 != null) {
+    nwAll = full * (nwF || 0) + full2 * (nwC2 || 0) + (tail > 0 ? tail * (nwT || 0) : 0);
   }
 
-  return { ctns, full, tail, range, cbmOne, cbmAll, nwAll, gwAll };
+  return { ctns, full, full2, tail, range, cbmOne, cbmAll, nwAll, gwAll };
 }
 
 /* 实测口径的数量：整箱数×单箱装量 + 尾箱数×尾箱装量（或直接取填入的总数量）
@@ -3709,7 +3899,9 @@ function calc2(r, startCtn) {
 function qty2Of(r) {
   if (has(r.qty)) return num(r.qty);
   const c = calc2(r, 1);
-  return c.full * num(r.pcs) + (c.tail > 0 ? c.tail * num(r.tpcs) : num(r.tpcs));
+  /* 组合2计入：整×装量 + 组合2×组合2装量 + 尾（尾箱数=0 时按装量计一次，尾数合箱约定） */
+  return c.full * num(r.pcs) + (c.full2 > 0 ? c.full2 * num(r.pcs2) : 0) +
+    (c.tail > 0 ? c.tail * num(r.tpcs) : num(r.tpcs));
 }
 function visibleP2() {
   return S.p2.filter(r => {
@@ -3785,7 +3977,7 @@ function render2() {
       ? '<td style="text-align:center;padding:3px 2px"><span class="badge-mod" title="第一部分有变动待同步：&#10;' + esc(chg.diffs.join('、')) + '">⚠️ 待同步</span><br><span style="font-size:11px;color:#8b9db0">#' + (i + 1) + '</span></td>'
       : '<td style="text-align:center;color:#8b9db0">' + (i + 1) + '</td>';
 
-    const hasRealTail = c.tail > 0 && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
+    const hasRealTail = (c.tail > 0 || c.full2 > 0) && r.tailCombined !== 'sub' && !String(r.remark || '').includes('合入') && !String(r.remark || '').includes('并入');
 
     tr.innerHTML =
       '<td style="text-align:center"><input type="checkbox" class="rowchk2" data-k="' + esc(r.key) + '"' +
@@ -3800,6 +3992,8 @@ function render2() {
       inp2('remark', r.remark, 'text', (chg && chg.fields.remark !== undefined ? 'chg-highlight' : ''), '', (chg && chg.fields.remark !== undefined ? '第一部分已改为: ' + chg.fields.remark : '')) +
       inp2('full', r.full, 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分整箱数有修改' : '')) +
       inp2('pcs', r.pcs, 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分装量有修改' : '')) +
+      inp2('full2', r.full2 || '', 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分组合2有修改' : '')) +
+      inp2('pcs2', r.pcs2 || '', 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分组合2装量有修改' : '')) +
       inp2('tail', r.tail, 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分尾箱数有修改' : '')) +
       inp2('tpcs', r.tpcs, 'num', (chg && chg.fields.packing ? 'chg-highlight' : ''), '', (chg && chg.fields.packing ? '第一部分尾箱装量有修改' : '')) +
       inp2('ctns', r.ctns, 'num') +
@@ -3807,9 +4001,13 @@ function render2() {
       inp2('size', r.size, 'text', 'wh', '如 56.5*37*31.5') +
       inp2('gw', r.gw, 'num', 'wh', 'KG') +
       inp2('nw', r.nw, 'num', 'wh', 'KG') +
-      inp2('t_size', hasRealTail ? r.t_size : '', 'text', 'wh' + (!hasRealTail ? ' disabled-cell' : ''), hasRealTail ? '尾箱 ' + c.tail + ' 件' : '无尾箱') +
-      inp2('t_gw', hasRealTail ? r.t_gw : '', 'num', 'wh' + (!hasRealTail ? ' disabled-cell' : ''), hasRealTail ? '尾箱 KG' : '无尾箱') +
-      inp2('t_nw', hasRealTail ? r.t_nw : '', 'num', 'wh' + (!hasRealTail ? ' disabled-cell' : ''), hasRealTail ? '尾箱 KG' : '无尾箱') +
+      /* 组合2专属实测字段（2026-11-13）：与尾箱字段彻底分开，互不占用 */
+      inp2('c2_size', c.full2 > 0 ? r.c2_size : '', 'text', 'wh' + (c.full2 <= 0 ? ' disabled-cell' : ''), c.full2 > 0 ? '组合2箱规 CM' : '无组合2') +
+      inp2('c2_gw', c.full2 > 0 ? r.c2_gw : '', 'num', 'wh' + (c.full2 <= 0 ? ' disabled-cell' : ''), c.full2 > 0 ? '组合2毛重 KG' : '无组合2') +
+      inp2('c2_nw', c.full2 > 0 ? r.c2_nw : '', 'num', 'wh' + (c.full2 <= 0 ? ' disabled-cell' : ''), c.full2 > 0 ? '组合2净重 KG' : '无组合2') +
+      inp2('t_size', c.tail > 0 ? r.t_size : '', 'text', 'wh' + (c.tail <= 0 ? ' disabled-cell' : ''), c.tail > 0 ? '尾箱 ' + c.tail + ' 件' : '无尾箱') +
+      inp2('t_gw', c.tail > 0 ? r.t_gw : '', 'num', 'wh' + (c.tail <= 0 ? ' disabled-cell' : ''), c.tail > 0 ? '尾箱 KG' : '无尾箱') +
+      inp2('t_nw', c.tail > 0 ? r.t_nw : '', 'num', 'wh' + (c.tail <= 0 ? ' disabled-cell' : ''), c.tail > 0 ? '尾箱 KG' : '无尾箱') +
       '<td><span class="calc cbm">' + (c.cbmAll != null ? fmt3(c.cbmAll) : '') + '</span></td>' +
       '<td><span class="calc">' + (c.nwAll != null ? fmt2(c.nwAll) : '') + '</span></td>' +
       '<td><span class="calc">' + (c.gwAll != null ? fmt2(c.gwAll) : '') + '</span></td>';
@@ -3953,11 +4151,13 @@ document.addEventListener('input', e => {
 
   markDirty('p2');                           /* 第二部分改了 → 第三部分/装箱单跟着重算 */
 
-  /* 整箱数 / 尾箱数 与装量联动：总件数(箱)=整+尾，总数量=整×单箱装量 + 尾×尾箱装量 */
-  if (['full', 'pcs', 'tail', 'tpcs'].indexOf(el.dataset.f2) >= 0) {
+  /* 整箱数 / 组合2 / 尾箱数 与装量联动：总件数(箱)=整+组合2+尾，总数量=整×单箱装量 + 组合2×组合2装量 + 尾×尾箱装量 */
+  if (['full', 'pcs', 'full2', 'pcs2', 'tail', 'tpcs'].indexOf(el.dataset.f2) >= 0) {
     const f = num(r.full), p = num(r.pcs), t = num(r.tail), tp = num(r.tpcs);
-    r.ctns = f + t;
-    r.qty = f * p + t * tp;
+    const f2 = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+    const p2v = f2 > 0 ? num(r.pcs2) : 0;
+    r.ctns = f + f2 + t;
+    r.qty = f * p + f2 * p2v + t * tp;
     Array.from(tr.querySelectorAll('input[data-f2]')).forEach(inp => {
       if (inp.dataset.f2 === 'ctns') inp.value = r.ctns;
       if (inp.dataset.f2 === 'qty') inp.value = r.qty;
@@ -4123,13 +4323,13 @@ $('#btnClearMeasure').onclick = async () => {
       '清除后仅勾选行的实测尺寸与重量重置为空，其余未勾选行保持不变：');
     if (!ok) return;
 
-    checked.forEach(r => { r.size = ''; r.gw = ''; r.nw = ''; r.vol = ''; r.t_size = ''; r.t_gw = ''; r.t_nw = ''; });
+    checked.forEach(r => { r.size = ''; r.gw = ''; r.nw = ''; r.vol = ''; r.t_size = ''; r.t_gw = ''; r.t_nw = ''; r.c2_size = ''; r.c2_gw = ''; r.c2_nw = ''; });
     S.chk2 = [];
     render2(); render3();
     toast('已清除勾选的 ' + checked.length + ' 行实测数据（已自动清空勾选）', 'ok');
   } else {
     // 场景 B：什么都没勾选
-    const filledAll = S.p2.filter(r => (r.size || r.gw || r.nw || r.vol || r.t_size || r.t_gw || r.t_nw));
+    const filledAll = S.p2.filter(r => (r.size || r.gw || r.nw || r.vol || r.t_size || r.t_gw || r.t_nw || r.c2_size || r.c2_gw || r.c2_nw));
     if (!filledAll.length) {
       toast('当前表格中没有已填写的实测值');
       return;
@@ -4140,7 +4340,7 @@ $('#btnClearMeasure').onclick = async () => {
     ], '清除后可重新填报实测数据：');
     if (!ok) return;
 
-    S.p2.forEach(r => { r.size = ''; r.gw = ''; r.nw = ''; r.vol = ''; r.t_size = ''; r.t_gw = ''; r.t_nw = ''; });
+    S.p2.forEach(r => { r.size = ''; r.gw = ''; r.nw = ''; r.vol = ''; r.t_size = ''; r.t_gw = ''; r.t_nw = ''; r.c2_size = ''; r.c2_gw = ''; r.c2_nw = ''; });
     render2(); render3();
     toast('已清空全部实测数据', 'ok');
   }
@@ -5384,16 +5584,17 @@ if ($('#btnCalcWeights')) {
         r.nw = Math.max(0.01, Math.round((num(r.gw) - 0.8) * 100) / 100);
         chg = true;
       }
-      // ② 尾箱推导（仅当存在真实独立尾箱，即尾箱数 > 0 且非并入从属行时）：
+      // ② 尾箱推导（仅真实尾箱 tail>0）；组合2走专属 c2_* 字段，不占尾箱列（2026-11-13 用户约定）
       const isSubMerged = r.tailCombined === 'sub' || String(r.remark || '').includes('已合入') || String(r.remark || '').includes('并入主箱') || String(r.remark || '').includes('尾箱并入');
-      const hasTail = !isSubMerged && num(r.tail) > 0;
-      if (hasTail) {
+      const realTail = !isSubMerged && num(r.tail) > 0;
+      const hasCombo2 = !isSubMerged && num(r.full2) > 0 && num(r.pcs2) > 0;
+      if (realTail) {
         // 尾箱箱规继承整箱
         if (has(r.size) && (!has(r.t_size) || !r.t_size.trim())) {
           r.t_size = r.size.trim();
           chg = true;
         }
-        // 尾箱毛重等比换算：实测毛重 × (尾箱数量 / 整箱数量)
+        // 尾箱毛重等比换算：实测毛重 × (尾箱装量 / 整箱装量)
         if (has(r.gw) && num(r.gw) > 0 && (!has(r.t_gw) || num(r.t_gw) === 0)) {
           const fullP = num(r.pcs);
           const tailP = num(r.tpcs);
@@ -5407,12 +5608,45 @@ if ($('#btnCalcWeights')) {
           r.t_nw = Math.max(0.01, Math.round((num(r.t_gw) - 0.8) * 100) / 100);
           chg = true;
         }
-      } else {
-        // 无独立尾箱或已并入主箱的行，清理残留的尾箱实测值
-        if (r.t_size || r.t_gw || r.t_nw) {
+      }
+      if (hasCombo2) {
+        // 组合2箱规继承整箱
+        if (has(r.size) && (!has(r.c2_size) || !r.c2_size.trim())) {
+          r.c2_size = r.size.trim();
+          chg = true;
+        }
+        // 组合2毛重等比换算：实测毛重 × (组合2装量 / 整箱装量)
+        if (has(r.gw) && num(r.gw) > 0 && (!has(r.c2_gw) || num(r.c2_gw) === 0)) {
+          const fullP = num(r.pcs);
+          const c2P = num(r.pcs2);
+          if (fullP > 0 && c2P > 0) {
+            r.c2_gw = Math.max(0.01, Math.round((num(r.gw) * (c2P / fullP)) * 100) / 100);
+            chg = true;
+          }
+        }
+        // 组合2净重：组合2毛重 - 0.8
+        if (has(r.c2_gw) && num(r.c2_gw) > 0 && (!has(r.c2_nw) || num(r.c2_nw) === 0)) {
+          r.c2_nw = Math.max(0.01, Math.round((num(r.c2_gw) - 0.8) * 100) / 100);
+          chg = true;
+        }
+        /* 旧版迁移：组合2的推导值曾写进尾箱字段（无尾箱的行）→ 挪到 c2_*，尾箱字段清空 */
+        if (!realTail && (has(r.t_gw) || has(r.t_nw) || has(r.t_size))) {
+          if (!has(r.c2_size) && has(r.t_size)) r.c2_size = r.t_size;
+          if (!has(r.c2_gw) && has(r.t_gw)) r.c2_gw = r.t_gw;
+          if (!has(r.c2_nw) && has(r.t_nw)) r.c2_nw = r.t_nw;
+          r.t_size = ''; r.t_gw = ''; r.t_nw = '';
+          chg = true;
+        }
+      }
+      if (!realTail && !hasCombo2) {
+        // 无独立尾箱且无组合2的行，清理残留的尾箱/组合2实测值
+        if (r.t_size || r.t_gw || r.t_nw || r.c2_size || r.c2_gw || r.c2_nw) {
           r.t_size = '';
           r.t_gw = '';
           r.t_nw = '';
+          r.c2_size = '';
+          r.c2_gw = '';
+          r.c2_nw = '';
           chg = true;
         }
       }
@@ -5963,7 +6197,9 @@ function applyPayload(p) {
 function restoreData() {
   let p = null;
   try { p = JSON.parse(localStorage.getItem(DATA_KEY) || 'null'); } catch (e) { p = null; }
-  if (!p || !Array.isArray(p.rows) || !p.rows.length) return 0;
+  /* 2026-11-13：不再要求 rows 非空——「清空全部」保留打托数据后，存档可能只有 pal（rows 为空），
+     仍需 applyPayload 恢复第四部分 */
+  if (!p) return 0;
   try { applyPayload(p); return S.rows.length; } catch (e) { return 0; }
 }
 function clearSaved() { try { localStorage.removeItem(DATA_KEY); } catch (e) {} }
@@ -6674,7 +6910,12 @@ function tplPlanGroups(rows) {
   return rows.map(r => {
     const ctns = num(r.ctns);
     const tail = Math.min(Math.max(num(r.tail), 0), ctns);
-    const full = Math.max(ctns - tail, 0);
+    /* 组合2（如 4件*3500+2件*3000 的 2箱×3000装）：单独一行整箱行，不算尾箱 */
+    const f2raw = (num(r.full2) > 0 && num(r.pcs2) > 0) ? num(r.full2) : 0;
+    const p1f2 = f2raw > 0 ? 0 : (() => { const q = p1Of(r); return (q && num(q.full2) > 0 && num(q.pcs2) > 0) ? num(q.full2) : 0; })();
+    const pcs2raw = f2raw > 0 ? num(r.pcs2) : (() => { const q = p1Of(r); return (q && num(q.full2) > 0 && num(q.pcs2) > 0) ? num(q.pcs2) : 0; })();
+    const f2 = f2raw || p1f2;
+    const full = Math.max(ctns - tail - f2, 0);
     const pcs = num(r.pcs), tpcs = num(r.tpcs);
     const p1 = p1Of(r);
 
@@ -6744,6 +6985,14 @@ function tplPlanGroups(rows) {
 
     const out = [{ desc: descF, tail: false, F: full, G: pcs, H: full * pcs, I: effSize,
       J: nwF == null ? '' : r3(full * nwF), K: gwF == null ? '' : r3(full * gwF), L: volF == null ? '' : r3(full * volF) }];
+    /* 组合2整箱行：重量/箱规优先用「尾箱实测」字段（复用为组合2），没填按整箱口径 */
+    if (f2 > 0 && pcs2raw > 0) {
+      const nw2 = has(r.t_nw) ? num(r.t_nw) : nwF;
+      const gw2 = has(r.t_gw) ? num(r.t_gw) : gwF;
+      const vol2 = tsz != null ? tsz : volF;
+      out.push({ desc: descF, tail: false, F: f2, G: pcs2raw, H: f2 * pcs2raw, I: has(r.t_size) ? r.t_size : effSize,
+        J: nw2 == null ? '' : r3(f2 * nw2), K: gw2 == null ? '' : r3(f2 * gw2), L: vol2 == null ? '' : r3(f2 * vol2) });
+    }
     if (tail > 0 || tpcs > 0) {
       out.push({ desc: descT, tail: true, F: tail, G: tpcs, H: (tail > 0 ? tail * tpcs : tpcs), I: effTailSize,
         J: nwT == null ? '' : r3(tail * nwT), K: gwT == null ? '' : r3(tail * gwT), L: volT == null ? '' : r3(tail * volT) });
@@ -7024,20 +7273,28 @@ function palState() {
   if (S.pal.baseSize === '120*100') S.pal.baseSize = '110*110';
   if (num(S.pal.tare) === 25) S.pal.tare = 15;
   if (!Array.isArray(S.pal.pallets)) S.pal.pallets = [];
+  /* 合同多选（2026-11-13）：ctSel 是第四部分的筛选口径；旧数据只有 contract 单选，迁移成数组。
+     contract 保留为 ctSel[0]，兼容旧迁移逻辑。 */
+  if (!Array.isArray(S.pal.ctSel) || !S.pal.ctSel.length) S.pal.ctSel = S.pal.contract ? [S.pal.contract] : [];
   return S.pal;
 }
-/* 当前合同在③里的品项行（顺序与第三部分一致） */
-function palRows() {
+/* 当前多选的合同列表（至少 1 个，由 chips 交互保证） */
+function palCurCts() {
   const st = palState();
-  const g = contractGroups().filter(x => x.name === st.contract)[0];
-  return g ? g.rows : [];
+  return (Array.isArray(st.ctSel) && st.ctSel.length) ? st.ctSel : (st.contract ? [st.contract] : []);
 }
-/* key → [{p:托, ctns:箱数}]：某个品项被分进了哪些托 */
+/* 多选合同在③里的品项行（顺序：按合同顺序依次拼接，与第三部分一致） */
+function palRows() {
+  const sel = palCurCts();
+  return contractGroups().filter(g => sel.indexOf(g.name) >= 0).reduce((a, g) => a.concat(g.rows), []);
+}
+/* key → [{p:托, ctns:箱数}]：某个品项被分进了哪些托。
+   2026-11-13 起不再按合同过滤：品项 key 全局唯一，含该 key 的托（纯合同托或跨合同共享托）
+   都与该品项的余量有关，全量统计才正确。 */
 function palAlloc() {
   const st = palState();
   const m = {};
   st.pallets.forEach(p => {
-    if (p.ct !== st.contract) return;   /* 按合同隔离：只算当前合同的托（2026-11-05） */
     (p.items || []).forEach(it => {
       if (!it.key || !(num(it.ctns) > 0)) return;
       (m[it.key] = m[it.key] || []).push({ p: p, ctns: num(it.ctns) });
@@ -7056,10 +7313,27 @@ function palMigrateCt() {
     p.ct = (r && r.contract) ? r.contract : (st.contract || '');
   });
 }
-/* 当前合同下的托列表：品项池、托卡片、统计、导出都只认这批（按合同隔离） */
+/* 当前多选合同下的托列表：品项池、托卡片、统计、导出都只认这批。
+   纯合同托：ct 在多选中即显示；跨合同共享托（ct='*'，2026-11-13）：
+   只要托内有任一品项属于多选合同就显示；空共享托按建托时记录的 cts 显示。 */
 function palCtPallets() {
   const st = palState();
-  return st.pallets.filter(p => p.ct === st.contract);
+  const sel = palCurCts();
+  return st.pallets.filter(p => {
+    if (sel.indexOf(p.ct) >= 0) return true;
+    if (p.ct === '*') {
+      const items = (p.items || []).filter(it => num(it.ctns) > 0);
+      /* 空托（刚建还没放品项）：无法用「托里装的货属于哪个合同」判断，
+         改用建托时记录的来源合同 cts；旧数据没有 cts 则一律显示。
+         不加这条会让多选状态下新建的共享托建完立刻被过滤掉、点了像没反应（2026-11-13） */
+      if (!items.length) return !p.cts || !p.cts.length || p.cts.some(c => sel.indexOf(c) >= 0);
+      return items.some(it => {
+        const r = S.p2.find(x => x.key === it.key);
+        return r && sel.indexOf(r.contract) >= 0;
+      });
+    }
+    return false;
+  });
 }
 /* 某品项还没分进托的剩余箱数 */
 function palRemaining(r, alloc) {
@@ -7201,7 +7475,15 @@ function palPlan() {
   groups.forEach(g => {
     const pc0 = palPalletCalc(g.p0);
     const perCtn = g.items.reduce((s, it) => s + num(it.ctns), 0);
-    const desc = g.items.map(it => { const r = S.p2.find(x => x.key === it.key); return r ? nm(r) : it.key; }).join('+');
+    /* 品名（2026-11-13 用户约定）：
+       - 不带合同号（合同信息由 invoice 号体现）
+       - 混托（多个品项）：每个品名后标 (箱数)，用换行分隔，不用 + 连接
+       - 单品托：只写品名 */
+    const desc = g.items.map(it => {
+      const r = S.p2.find(x => x.key === it.key);
+      const name = r ? nm(r) : it.key;
+      return g.items.length >= 2 ? name + ' (' + num(it.ctns) + ')' : name;
+    }).join('\n');
     out.push({
       item: g.items.length === 1 ? ((S.p2.find(x => x.key === g.items[0].key) || {}).item_no || '') : '',
       desc: desc,
@@ -7253,11 +7535,19 @@ function palEnDate(d) {
 function renderP4() {
   const st = palState();
   palMigrateCt();
-  const sel = $('#palCt');
+  /* 合同多选下拉面板：按钮显示已选数，点开勾选；剔除已失效合同号，全空时默认选第一个 */
   const cts = contractGroups().map(g => g.name);
-  if (st.contract && cts.indexOf(st.contract) < 0) st.contract = '';
-  if (!st.contract && cts.length) st.contract = cts[0];
-  sel.innerHTML = cts.map(c => '<option value="' + esc(c) + '"' + (c === st.contract ? ' selected' : '') + '>' + esc(c) + '</option>').join('');
+  st.ctSel = st.ctSel.filter(c => cts.indexOf(c) >= 0);
+  if (!st.ctSel.length && cts.length) st.ctSel = [cts[0]];
+  st.contract = st.ctSel[0] || '';
+  const palCtOpen = window._palCtOpen = !!window._palCtOpen;
+  $('#palCt').innerHTML =
+    '<span class="ctDrop" id="palCtDrop">'
+    + '<span class="ctDropBtn" id="palCtBtn">📁 合同（已选 ' + st.ctSel.length + '/' + cts.length + '）' + (st.ctSel.length > 0 && st.ctSel.length <= 2 ? '：' + esc(st.ctSel.join('、')) : '') + ' ▾</span>'
+    + '<div class="ctDropPanel' + (palCtOpen ? ' open' : '') + '">'
+    + '<div class="ctOpt' + (st.ctSel.length === cts.length ? ' on' : '') + '" data-ctall="1" style="border-bottom:1px dashed #e3edf5;margin-bottom:4px;padding-bottom:8px"><span class="box"></span> 全选 / 取消全选（保留第一个）</div>'
+    + cts.map(c => '<div class="ctOpt' + (st.ctSel.indexOf(c) >= 0 ? ' on' : '') + '" data-ct="' + esc(c) + '"><span class="box"></span> ' + esc(c) + '</div>').join('')
+    + '</div></span>';
 
   const rows = palRows();
   const ctPals = palCtPallets();
@@ -7269,20 +7559,21 @@ function renderP4() {
   $('#palMetrics').innerHTML =
     '<span>📦 已建 <b>' + totPallets + '</b> 托</span><span>🧮 已分 <b>' + usedCtn + '</b> / ' + totalCtn + ' 箱</span>' +
     (!rows.length
-      ? '<span style="color:#7b8ea3">品项池为空 —— 托盘区只显示当前合同（' + esc(st.contract || '未选') + '）的托</span>'
+      ? '<span style="color:#7b8ea3">品项池为空 —— 托盘区只显示所选合同（' + esc(st.ctSel.join('、') || '未选') + '）的托</span>'
       : (remainCtn > 0 ? '<span style="color:#c1251a">⚠️ 未分 <b>' + remainCtn + '</b> 箱（将按散装处理）</span>' : '<span style="color:#0f7a45">✅ 全部分配完毕</span>'));
 
   const pname = r => ((r.item_no ? r.item_no + ' ' : '') + (r.name_en || translateAccToEn(r.product_name, r.spec) || r.product_name || '(未命名)'));
+  const ctTagOf = r => (r && r.contract && st.ctSel.length > 1 ? ' <span class="ctTag">' + esc(r.contract) + '</span>' : '');
 
   let h = '<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">';
   /* 左：品项池 */
   h += '<div style="flex:1;min-width:320px;border:1px solid #d7e3ee;border-radius:8px;background:#fbfdff;padding:10px">';
-  h += '<div style="font-weight:700;color:#183247;margin-bottom:8px">📦 品项池（' + esc(st.contract || '未选合同') + '）</div>';
-  if (!rows.length) h += '<div style="color:#7b8ea3;font-size:12.5px">该合同号下没有品项 —— 先到第三部分把合同号填好。</div>';
+  h += '<div style="font-weight:700;color:#183247;margin-bottom:8px">📦 品项池（' + esc(st.ctSel.join('、') || '未选合同') + '）</div>';
+  if (!rows.length) h += '<div style="color:#7b8ea3;font-size:12.5px">所选合同下没有品项 —— 先到第三部分把合同号填好。</div>';
   rows.forEach(r => {
     const rem = palRemaining(r, alloc);
     h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-bottom:1px dashed #e3edf5;font-size:12.5px' + (rem === 0 ? ';opacity:.55' : '') + '">'
-      + '<span style="flex:1">' + esc(pname(r)) + ' <span style="color:#7b8ea3">· 共' + num(r.ctns) + '箱</span></span>'
+      + '<span style="flex:1">' + esc(pname(r)) + ctTagOf(r) + ' <span style="color:#7b8ea3">· 共' + num(r.ctns) + '箱</span></span>'
       + (rem > 0
         ? '<span style="color:#c1251a;font-weight:700">余 ' + rem + '</span>'
           + '<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#57728a">'
@@ -7290,6 +7581,7 @@ function renderP4() {
           + '<span>×</span>'
           + '<input class="t" style="width:64px;text-align:right" type="number" min="1" placeholder="箱/托" data-qpal-m>'
           + '</span>'
+          + '<span data-qpal-hint="' + esc(r.key) + '" style="color:#c1251a;font-size:12px;font-weight:700;display:none"></span>'
           + '<button class="btn solid sm" data-act="qpal" data-key="' + esc(r.key) + '" title="按 托数×每托箱数 一次生成多个托">快捷打托</button>'
           + '<button class="btn sm" data-act="newwith" data-key="' + esc(r.key) + '">全部入新托</button>'
         : '<span style="color:#0f7a45">✅ 已分完</span>')
@@ -7297,21 +7589,23 @@ function renderP4() {
   });
   h += '</div>';
 
-  /* 右：托列表（只显示当前合同的托；品项池/合同为空时给提示不给托） */
+  /* 右：托列表（显示多选合同的托 + 含所选合同品项的跨合同共享托） */
   h += '<div style="flex:1.4;min-width:420px;display:flex;flex-direction:column;gap:10px">';
-  if (!st.contract || !rows.length) {
+  if (!st.ctSel.length || !rows.length) {
     h += '<div style="color:#7b8ea3;font-size:12.5px;border:1px dashed #c9d9e8;border-radius:8px;padding:14px;text-align:center">'
-      + (st.contract ? '「' + esc(st.contract) + '」品项池为空 —— 先到第三部分把该合同的品项补齐。' : '未选合同 —— 托盘按合同隔离显示，选中合同后可见对应托。')
+      + (st.ctSel.length ? '所选合同品项池为空 —— 先到第三部分把品项补齐。' : '未选合同 —— 点上方合同标签勾选后开始打托。')
       + '</div>';
   } else if (!ctPals.length) {
-    h += '<div style="color:#7b8ea3;font-size:12.5px;border:1px dashed #c9d9e8;border-radius:8px;padding:14px;text-align:center">「' + esc(st.contract) + '」还没有托 —— 点「➕ 新建托」或「⚡ 一键打托」开始。</div>';
+    h += '<div style="color:#7b8ea3;font-size:12.5px;border:1px dashed #c9d9e8;border-radius:8px;padding:14px;text-align:center">所选合同还没有托 —— 点「➕ 新建托」或用「快捷打托」开始。</div>';
   }
   /* 单托卡片（折叠展开时逐个渲染） */
   const card = (p, idx) => {
     const pc = palPalletCalc(p);
-    h += '<div style="border:1px solid #d7e3ee;border-radius:8px;background:#fff;padding:10px">'
+    const isShared = p.ct === '*';
+    h += '<div class="' + (isShared ? 'palShared' : '') + '" style="border:1px solid #d7e3ee;border-radius:8px;background:#fff;padding:10px">'
       + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">'
       + '<b style="color:#183247">🗄 第 ' + (idx + 1) + ' 托</b>'
+      + (isShared ? '<span style="background:#e8a13d;color:#fff;border-radius:10px;padding:1px 10px;font-size:12px;font-weight:700">🔗 跨合同共享</span>' : '')
       + '<label style="font-size:12px;color:#57728a">底尺寸cm <input class="t" style="width:88px" data-chg="psize" data-pid="' + esc(p.id) + '" value="' + esc(p.size || (st.baseSize || '110*110')) + '"></label>'
       + '<label style="font-size:12px;color:#57728a">总高cm <input class="t" style="width:60px" data-chg="ph" data-pid="' + esc(p.id) + '" value="' + esc((has(p.h) && num(p.h) > num(st.baseH || 0)) ? p.h : pc.h) + '"></label>'
       + (pc.h > 0 ? '<span style="font-size:11px;color:#7b8ea3">＝托盘' + (Math.round(num(st.baseH) * 10) / 10) + '＋堆高' + (Math.round((pc.h - num(st.baseH)) * 10) / 10) + '＝' + (Math.round(pc.h * 10) / 10) + 'cm</span>' : '')
@@ -7323,8 +7617,9 @@ function renderP4() {
     (p.items || []).forEach(it => {
       const r = S.p2.find(x => x.key === it.key);
       if (!r) return;
+      const showCt = isShared || st.ctSel.length > 1;   /* 共享托或多选时，品项前挂合同号徽标 */
       h += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;border-top:1px dashed #eef4f9">'
-        + '<span style="flex:1">' + esc(pname(r)) + '</span>'
+        + '<span style="flex:1">' + esc(pname(r)) + (showCt && r.contract ? ' <span class="ctTag">' + esc(r.contract) + '</span>' : '') + '</span>'
         + '<input class="t" style="width:72px;text-align:right" type="number" min="1" data-chg="ctns" data-pid="' + esc(p.id) + '" data-key="' + esc(it.key) + '" value="' + num(it.ctns) + '"> 箱'
         + '<button class="btn sm" data-act="delitem" data-pid="' + esc(p.id) + '" data-key="' + esc(it.key) + '">✕</button>'
         + '</div>';
@@ -7334,18 +7629,18 @@ function renderP4() {
     if (cand.length) {
       h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0 0;font-size:12.5px;border-top:1px solid #eef4f9">'
         + '<select class="t" style="flex:1" data-addsel="' + esc(p.id) + '">'
-        + cand.map(r => '<option value="' + esc(r.key) + '">' + esc(pname(r)) + '（余' + palRemaining(r, alloc) + '箱）</option>').join('')
+        + cand.map(r => '<option value="' + esc(r.key) + '">' + esc(pname(r)) + (st.ctSel.length > 1 && r.contract ? '·' + r.contract : '') + '（余' + palRemaining(r, alloc) + '箱）</option>').join('')
         + '</select>'
         + '<input class="t" style="width:72px;text-align:right" type="number" min="1" data-addctns="' + esc(p.id) + '" placeholder="箱数"> 箱'
         + '<button class="btn solid sm" data-act="additem" data-pid="' + esc(p.id) + '">加入</button>'
         + '</div>';
     }
-    h += '<div style="margin-top:8px;padding-top:6px;border-top:1px solid #eef4f9;font-size:12px;color:#33475b;display:flex;gap:12px;flex-wrap:wrap">'
-      + '<span>装箱 <b>' + pc.ctns + '</b> 箱' + (pc.tailCtns > 0 ? '（含尾箱 ' + pc.tailCtns + '）' : '') + '</span>'
-      + '<span>G.W. <b>' + (pc.gw != null ? (Math.round((pc.gw + pc.tare) * 100) / 100) : '—') + '</b> KG' + (pc.gw != null ? '（含皮重' + pc.tare + '）' : '（单箱重量未填）') + '</span>'
-      + '<span>N.W. <b>' + (pc.nw != null ? (Math.round(pc.nw * 100) / 100) : '—') + '</b> KG（净货重，不含皮重）</span>'
-      + '<span>尺寸 <b>' + esc(pc.size || '—') + (pc.h > 0 ? '*' + (Math.round(pc.h * 10) / 10) : '') + '</b> cm</span>'
-      + '<span>立方 <b>' + (Math.round(pc.vol * 1000) / 1000) + '</b> CBM</span>'
+    h += '<div style="margin-top:8px;padding-top:6px;border-top:1px solid #eef4f9;font-size:12px;color:#33475b;display:flex;gap:12px;flex-wrap:wrap;align-items:baseline">'
+      + '<span>装箱 <span class="palVal">' + pc.ctns + '</span><span class="palUnit"> 箱</span>' + (pc.tailCtns > 0 ? '（含尾箱 ' + pc.tailCtns + '）' : '') + '</span>'
+      + '<span>G.W. <span class="palVal">' + (pc.gw != null ? (Math.round((pc.gw + pc.tare) * 100) / 100) : '—') + '</span><span class="palUnit"> KG</span>' + (pc.gw != null ? '（含皮重' + pc.tare + '）' : '（单箱重量未填）') + '</span>'
+      + '<span>N.W. <span class="palVal">' + (pc.nw != null ? (Math.round(pc.nw * 100) / 100) : '—') + '</span><span class="palUnit"> KG</span>（净货重，不含皮重）</span>'
+      + '<span>尺寸 <span class="palVal">' + esc(pc.size || '—') + (pc.h > 0 ? '*' + (Math.round(pc.h * 10) / 10) : '') + '</span><span class="palUnit"> cm</span></span>'
+      + '<span>立方 <span class="palVal">' + (Math.round(pc.vol * 1000) / 1000) + '</span><span class="palUnit"> CBM</span></span>'
       + (pc.stackable ? '' : '<span style="color:#c1251a">⚠️ 箱规缺高度，请手填堆高</span>')
       + '</div></div>';
   };
@@ -7370,33 +7665,41 @@ function renderP4() {
         if (c1.gw != null) sumK += c1.gw + c1.tare; else gKnown = false;
         if (c1.nw != null) sumJ += c1.nw; else gKnown = false;
       }
-      const itemsDesc = (p0.items || []).map(it => {
-        const r = S.p2.find(x => x.key === it.key);
-        return (r ? pname(r) : it.key) + ' ' + num(it.ctns) + '箱';
-      }).join(' ＋ ') || '（空托）';
+      const its0 = (p0.items || []).filter(it => num(it.ctns) > 0);
+      const perCtn = its0.reduce((s, it) => s + num(it.ctns), 0);
+      /* 卡标题：单品托只显示品名（箱数在徽章里），混托显示「品A N箱 ＋ 品B N箱」 */
+      const cardTitle = its0.length === 1
+        ? (() => { const r = S.p2.find(x => x.key === its0[0].key); return r ? pname(r) : its0[0].key; })()
+        : (its0.map(it => { const r = S.p2.find(x => x.key === it.key); return (r ? pname(r) : it.key) + ' ' + num(it.ctns) + '箱'; }).join(' ＋ ') || '（空托）');
       const r2 = n => Math.round(n * 100) / 100;
       const r3 = n => Math.round(n * 1000) / 1000;
-      h += '<div style="border:1px dashed #9fc3e0;border-radius:8px;background:#f4f9fd;padding:10px">'
+      h += '<div class="' + (p0.ct === '*' ? 'palShared' : '') + '" style="border:1px solid #c9d9e8;border-radius:8px;background:#fff;padding:10px 12px">'
         + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-        + '<b style="color:#183247">🗄 第 ' + (gi + 1) + '–' + j + ' 托</b>'
-        + '<span style="background:#e3eef8;color:#2b5d8c;border-radius:10px;padding:1px 10px;font-size:12px;font-weight:700">同款 ×' + run + '</span>'
-        + '<span style="flex:1;font-size:12.5px;color:#33475b">' + esc(itemsDesc) + ' / 托</span>'
+        + '<b style="color:#183247;font-size:13px">' + esc(cardTitle) + '</b>'
+        + (p0.ct === '*' ? '<span style="background:#e8a13d;color:#fff;border-radius:10px;padding:1px 10px;font-size:12px;font-weight:700">🔗 跨合同共享</span>' : '')
+        + '<span style="background:#123a5f;color:#fff;border-radius:10px;padding:2px 12px;font-size:13px;font-weight:800">' + run + ' 托 × ' + perCtn + ' 箱/托</span>'
+        + '<span style="flex:1"></span>'
         + '<button class="btn sm" data-act="palview" data-pid="' + esc(p0.id) + '" title="只展开这一组，逐托修改">逐托微调</button>'
-        + (((p0.items || []).filter(it => num(it.ctns) > 0).length >= 2) ? '<button class="btn sm" data-act="splitmix" data-pid="' + gi + '" data-key="' + run + '" title="把这一组的混托都按品项拆成多个单品托">🔀 拆分混托</button>' : '')
+        + ((its0.length >= 2) ? '<button class="btn sm" data-act="splitmix" data-pid="' + gi + '" data-key="' + run + '" title="把这一组的混托都按品项拆成多个单品托">🔀 拆分混托</button>' : '')
         + '<button class="btn sm" data-act="delgroup" data-pid="' + gi + '" data-key="' + run + '" title="删除这 ' + run + ' 个同款托">🗑️ 删整组</button>'
         + '</div>'
-        + '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:12px;color:#57728a">'
+        + '<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#57728a">'
         + '<label>底尺寸cm <input class="t" style="width:88px" data-chg="gsize" data-pid="' + gi + '" data-key="' + run + '" value="' + esc(p0.size || (st.baseSize || '110*110')) + '"></label>'
         + '<label>总高cm <input class="t" style="width:60px" data-chg="gh" data-pid="' + gi + '" data-key="' + run + '" value="' + esc((has(p0.h) && num(p0.h) > num(st.baseH || 0)) ? p0.h : pc.h) + '"></label>'
-        + (pc.h > 0 ? '<span style="font-size:11px;color:#7b8ea3">＝托盘' + (Math.round(num(st.baseH) * 10) / 10) + '＋堆高' + (Math.round((pc.h - num(st.baseH)) * 10) / 10) + '＝' + (Math.round(pc.h * 10) / 10) + 'cm</span>' : '')
-        + '<label>皮重KG <input class="t" style="width:60px" data-chg="gtare" data-pid="' + gi + '" data-key="' + run + '" value="' + esc(has(p0.tare) && num(p0.tare) > 0 ? p0.tare : (num(st.tare) > 0 ? st.tare : '15')) + '"></label>'
-        + '<span style="color:#7b8ea3">↑ 改一次，这 ' + run + ' 个托同时生效</span>'
+        + (pc.h > 0 ? '<span style="font-size:11px;color:#7b8ea3">＝托盘' + (Math.round(num(st.baseH) * 10) / 10) + '＋堆高' + (Math.round((pc.h - num(st.baseH)) * 10) / 10) + '</span>' : '')
+        + '<label>皮重kg <input class="t" style="width:60px" data-chg="gtare" data-pid="' + gi + '" data-key="' + run + '" value="' + esc(has(p0.tare) && num(p0.tare) > 0 ? p0.tare : (num(st.tare) > 0 ? st.tare : '15')) + '"></label>'
+        + '<span style="font-size:11px;color:#7b8ea3">改一次，这 ' + run + ' 个托同时生效</span>'
         + '</div>'
-        + '<div style="margin-top:6px;padding-top:6px;border-top:1px dashed #cfe0ef;font-size:12px;color:#33475b;display:flex;gap:12px;flex-wrap:wrap">'
-        + '<span>每托装 <b>' + pc.ctns + '</b> 箱' + (sumTail > 0 ? '（组内含尾箱 ' + sumTail + ' 箱）' : '') + ' · G.W. <b>' + (pc.gw != null ? r2(pc.gw + pc.tare) : '—') + '</b> · N.W. <b>' + (pc.nw != null ? r2(pc.nw) : '—') + '</b> KG' + (pc.gw != null ? '（G.W.含皮重' + pc.tare + '）' : '（单箱重量未填）') + '</span>'
-        + '<span>尺寸 <b>' + esc(pc.size || '—') + (pc.h > 0 ? '*' + (Math.round(pc.h * 10) / 10) : '') + '</b> cm · 每托立方 <b>' + r3(pc.vol) + '</b></span>'
-        + '<span>本组合计 <b>' + run + '</b> 托 / <b>' + (pc.ctns * run) + '</b> 箱 · 总毛重 <b>' + (gKnown ? r2(sumK) : '—') + '</b> KG · 总立方 <b>' + r3(sumVol) + '</b> CBM</span>'
-        + (pc.stackable ? '' : '<span style="color:#c1251a">⚠️ 箱规缺高度，请手填堆高</span>')
+        + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+        + '<div style="flex:1;min-width:210px;background:#f4f9fd;border-radius:6px;padding:6px 10px">'
+        +   '<span style="font-size:11px;color:#7b8ea3">每托</span>'
+        +   '<div style="font-size:12.5px;color:#33475b;margin-top:2px">G.W. <span class="palVal">' + (pc.gw != null ? r2(pc.gw + pc.tare) : '—') + '</span><span class="palUnit"> kg</span> · N.W. <span class="palVal">' + (pc.nw != null ? r2(pc.nw) : '—') + '</span><span class="palUnit"> kg</span> · 立方 <span class="palVal">' + r3(pc.vol) + '</span><span class="palUnit"> CBM</span></div>'
+        +   '<div style="font-size:11.5px;color:#57728a;margin-top:2px">' + (pc.gw != null ? 'G.W. 含皮重 ' + pc.tare : '单箱重量未填') + (sumTail > 0 ? ' · 组内含尾箱 ' + sumTail + ' 箱' : '') + (pc.stackable ? '' : ' · <span style="color:#c1251a">⚠️ 箱规缺高度，请手填堆高</span>') + '</div>'
+        + '</div>'
+        + '<div style="flex:1.3;min-width:250px;background:#f4f9fd;border-radius:6px;padding:6px 10px">'
+        +   '<span style="font-size:11px;color:#7b8ea3">本组合计</span>'
+        +   '<div style="font-size:12.5px;color:#33475b;margin-top:2px"><span class="palValB">' + run + '</span><span class="palUnit"> 托</span> / <span class="palValB">' + (pc.ctns * run) + '</span><span class="palUnit"> 箱</span> · 总毛重 <span class="palValB">' + (gKnown ? r2(sumK) : '—') + '</span><span class="palUnit"> kg</span> · 总立方 <span class="palValB">' + r3(sumVol) + '</span><span class="palUnit"> CBM</span></div>'
+        + '</div>'
         + '</div></div>';
     } else {
       if (run >= 2) h += '<div style="text-align:right;margin-bottom:6px"><button class="btn sm" data-act="palview" data-pid="' + esc(p0.id) + '">🔩 收起这 ' + run + ' 个同款托</button></div>';
@@ -7413,17 +7716,24 @@ window.renderP4 = renderP4;
 function palTouch() { persist(); }
 window.palAddPallet = function () {
   const st = palState();
-  st.pallets.push({ id: uid(), ct: st.contract || '', size: '', h: '', tare: '', items: [] });
+  /* 多选合同（≥2）时新建的托为跨合同共享托（ct='*'）；单选仍归属该合同（2026-11-13）
+     cts 记录建托时选中的合同：空托没有品项，靠它判断在哪些合同视图里可见 */
+  const sel = palCurCts();
+  st.pallets.push({ id: uid(), ct: sel.length === 1 ? sel[0] : '*', cts: sel.slice(), size: '', h: '', tare: '', items: [] });
   palTouch(); renderP4();
+  toast(sel.length === 1 ? '已新建 1 个托（' + sel[0] + '）' : '已新建 1 个跨合同共享托', 'ok');
 };
 window.palClearAll = function () {
   const st = palState();
-  const list = palCtPallets();
-  if (!list.length) { toast('当前合同没有托可清空'); return; }
-  if (!confirm('确定清空「' + (st.contract || '未选') + '」的 ' + list.length + ' 个托？其它合同的托不受影响，品项数据不受影响。')) return;
+  /* 2026-11-13 多选/共享托口径：只清所选合同的纯合同托；
+     跨合同共享托（ct='*'）里可能装着其他合同的货，一律不在这里删，防误伤 */
+  const sel = palCurCts();
+  const list = st.pallets.filter(p => sel.indexOf(p.ct) >= 0);
+  if (!list.length) { toast('所选合同没有可清空的托（跨合同共享托不受影响）'); return; }
+  if (!confirm('确定清空所选合同（' + sel.join('、') + '）的 ' + list.length + ' 个托？\n跨合同共享托不受影响；品项数据不受影响。')) return;
   st.pallets = st.pallets.filter(x => list.indexOf(x) < 0);
   palTouch(); renderP4();
-  toast('已清空「' + (st.contract || '未选') + '」的打托分配', 'ok');
+  toast('已清空「' + sel.join('、') + '」的打托分配', 'ok');
 };
 function palCtnsOfKey(key) {
   const r = S.p2.find(x => x.key === key);
@@ -7433,23 +7743,26 @@ window.palAct = function (act, pid, key, extra) {
   const st = palState();
   const p = st.pallets.find(x => x.id === pid);
   if (act === 'qpal') {
-    /* 快捷打托：一次生成 N 个托，每托 M 箱（只针对该品项的剩余箱数） */
+    /* 快捷打托：一次生成 N 个托，每托 M 箱（只针对该品项的剩余箱数）。
+       2026-11-13 用户约定：托数×箱/托 超过剩余箱数时不自动截断、不进入打托，
+       行内红字提示差额，由人工改数后重试（旧版会静默改成 floor(余/m) 托，违反「只警告不自动改数」约定） */
     const r = S.p2.find(x => x.key === key);
     if (!r) return;
     const rem = palRemaining(r);
     if (!(rem > 0)) { toast('该品项已全部分配'); return; }
+    const hint = Array.prototype.find.call(document.querySelectorAll('[data-qpal-hint]'), el => el.dataset.qpalHint === key);
+    const showHint = t => { if (hint) { hint.textContent = t; hint.style.display = 'inline'; } };
     let n = Math.floor(Math.max(0, num(extra && extra.n)));
     let m = Math.floor(Math.max(0, num(extra && extra.m)));
     if (!(n > 0) || !(m > 0)) { toast('请先填「托数」和「每托箱数」（正整数）'); return; }
-    let clamped = false;
     if (n * m > rem) {
-      n = Math.floor(rem / m);
-      if (!(n > 0)) { toast('剩余 ' + rem + ' 箱不够每托 ' + m + ' 箱，请减小每托箱数'); return; }
-      clamped = true;
+      showHint('⚠️ 超 ' + (n * m - rem) + ' 箱（余 ' + rem + '），请改小托数或箱/托');
+      toast('托数×箱/托 = ' + (n * m) + '，超过剩余 ' + rem + ' 箱，未打托，请改小托数或箱/托', 'warn');
+      return;
     }
-    for (let i = 0; i < n; i++) st.pallets.push({ id: uid(), ct: st.contract || '', size: '', h: '', tare: '', items: [{ key: key, ctns: m }] });
+    for (let i = 0; i < n; i++) st.pallets.push({ id: uid(), ct: r.contract || '', size: '', h: '', tare: '', items: [{ key: key, ctns: m }] });
     palTouch(); renderP4();
-    toast((clamped ? '⚠️ 剩余只有 ' + rem + ' 箱，已改为 ' : '已生成 ') + n + ' 托 × ' + m + ' 箱，余 ' + (rem - n * m) + ' 箱留在品项池', clamped ? '' : 'ok');
+    toast('已生成 ' + n + ' 托 × ' + m + ' 箱，余 ' + (rem - n * m) + ' 箱留在品项池', 'ok');
     return;
   }
   if (act === 'newwith') {
@@ -7457,7 +7770,7 @@ window.palAct = function (act, pid, key, extra) {
     if (!r) return;
     const rem = palRemaining(r);
     if (!(rem > 0)) { toast('该品项已全部分配'); return; }
-    st.pallets.push({ id: uid(), ct: st.contract || '', size: '', h: '', tare: '', items: [{ key: key, ctns: rem }] });
+    st.pallets.push({ id: uid(), ct: r.contract || '', size: '', h: '', tare: '', items: [{ key: key, ctns: rem }] });
     palTouch(); renderP4(); return;
   }
   if (act === 'palview') {
@@ -7490,7 +7803,7 @@ window.palAct = function (act, pid, key, extra) {
       if (its.length < 2) continue;
       const idx = st.pallets.indexOf(tp);
       if (idx < 0) continue;
-      const news = its.map(it => ({ id: uid(), ct: tp.ct || '', size: tp.size || '', h: tp.h || '', tare: tp.tare || '', items: [{ key: it.key, ctns: num(it.ctns) }] }));
+      const news = its.map(it => ({ id: uid(), ct: (S.p2.find(x => x.key === it.key) || {}).contract || tp.ct || '', size: tp.size || '', h: tp.h || '', tare: tp.tare || '', items: [{ key: it.key, ctns: num(it.ctns) }] }));
       st.pallets.splice(idx, 1, ...news);
       made += news.length;
     }
@@ -7504,7 +7817,7 @@ window.palAct = function (act, pid, key, extra) {
     const its = (p.items || []).filter(it => num(it.ctns) > 0);
     if (its.length < 2) { toast('这个托只有一种品项，无需拆分'); return; }
     const idx = st.pallets.findIndex(x => x.id === pid);
-    const news = its.map(it => ({ id: uid(), ct: p.ct || '', size: p.size || '', h: p.h || '', tare: p.tare || '', items: [{ key: it.key, ctns: num(it.ctns) }] }));
+    const news = its.map(it => ({ id: uid(), ct: (S.p2.find(x => x.key === it.key) || {}).contract || p.ct || '', size: p.size || '', h: p.h || '', tare: p.tare || '', items: [{ key: it.key, ctns: num(it.ctns) }] }));
     st.pallets.splice(idx, 1, ...news);
     palTouch(); renderP4();
     toast('已拆成 ' + news.length + ' 个单品托', 'ok');
@@ -7527,10 +7840,17 @@ window.palAct = function (act, pid, key, extra) {
     const rem = palRemaining(S.p2.find(x => x.key === k));
     if (!(n > 0)) n = rem;                       /* 不填箱数 = 全放进来 */
     if (!(n > 0)) { toast('该品项没有剩余箱数'); return; }
-    if (n > rem) { n = rem; toast('超出剩余箱数，已按 ' + rem + ' 箱加入'); }
+    /* 2026-11-13 用户约定：超出剩余箱数直接拦截，不自动截断（旧版会静默按余数加入） */
+    if (n > rem) { toast('超出剩余箱数：该品项只余 ' + rem + ' 箱，未加入，请改小箱数', 'warn'); return; }
     const exist = (p.items || []).find(it => it.key === k);
     if (exist) exist.ctns = num(exist.ctns) + n;
     else (p.items = p.items || []).push({ key: k, ctns: n });
+    /* 往纯合同托里加了别的合同的品项 → 自动转跨合同共享托（2026-11-13） */
+    const nr = S.p2.find(x => x.key === k);
+    if (p.ct !== '*' && nr && nr.contract && nr.contract !== p.ct) {
+      p.ct = '*';
+      toast('已加入其他合同的品项，该托自动转为「跨合同共享托」', 'ok');
+    }
     palTouch(); renderP4(); return;
   }
 };
@@ -7545,8 +7865,10 @@ window.palChg = function (el) {
     const others = palAlloc()[it.key] || [];
     const usedElse = others.filter(a => a.p !== p).reduce((s, a) => s + a.ctns, 0);
     if (usedElse + n > rowCtns) {
-      n = Math.max(rowCtns - usedElse, 0);
-      toast('该品项总共只有 ' + rowCtns + ' 箱，已按 ' + n + ' 箱设置');
+      /* 2026-11-13 用户约定：超出总箱数直接拦截恢复原值，不自动截断（旧版会静默压到余数） */
+      toast('该品项总共只有 ' + rowCtns + ' 箱（其他托已占 ' + usedElse + ' 箱），已恢复原值，请改小箱数', 'warn');
+      renderP4();
+      return;
     }
     it.ctns = n;
     if (n === 0) p.items = p.items.filter(x => x.key !== it.key);
@@ -7613,8 +7935,11 @@ function fillTplSheetPallet(xml, plan, meta) {
 
   const newData = plan.map((v, i) => {
     const rn = FIRST + i;
+    /* 混托品名多行显示：行高随行数加高（每行约14px + 边距），最低 30（2026-11-13） */
+    const lines = String(v.desc || '').split('\n').length;
+    const ht = Math.max(30, lines * 14 + 6);
     const cs = [
-      '<c r="A' + rn + '" s="45"' + (v.item ? ' t="inlineStr"><is><t xml:space="preserve">' + esc(v.item) + '</t></is></c>' : '/>'),
+      '<c r="A' + rn + '" s="45"/>',   /* 唛头（MARKS AND NUMBERS）默认留空——2026-11-06 用户约定：没填唛头就不写字，导出后可手工补 */
       '<c r="B' + rn + '" s="46"/>',
       '<c r="C' + rn + '" s="47" t="inlineStr"><is><t xml:space="preserve">' + esc(v.desc) + '</t></is></c>',
       '<c r="D' + rn + '" s="47"/>',
@@ -7628,7 +7953,7 @@ function fillTplSheetPallet(xml, plan, meta) {
       '<c r="L' + rn + '" s="52">' + (v.L !== '' && v.L != null ? '<v>' + v.L + '</v>' : '') + '</c>',
       '<c r="N' + rn + '" s="44"/>', '<c r="O' + rn + '" s="44"/>', '<c r="P' + rn + '" s="44"/>'
     ].join('');
-    return { n: rn, xml: '<row r="' + rn + '" ht="30" customHeight="1">' + cs + '</row>' };
+    return { n: rn, xml: '<row r="' + rn + '" ht="' + ht + '" customHeight="1">' + cs + '</row>' };
   });
 
   /* 合计行：E=TOTAL:(共享字符串25)，F=实际托数（混托不重复计），H=总箱数，J/K/L=列合计 */
@@ -7657,7 +7982,7 @@ function fillTplSheetPallet(xml, plan, meta) {
   const all = keepTop.concat(newData, [{ n: T, xml: totalXml }], keepBottom);
   let out = head + all.map(r => r.xml).join('') + tailXml;
 
-  /* 合并格：保留第 14 行以上的全部；明细区改为每行 A:B（唛头=Item No.）与 C:E（品名） */
+  /* 合并格：保留第 14 行以上的全部；明细区改为每行 A:B（唛头，默认留空）与 C:E（品名） */
   const topMerges = [];
   const mc = /<mergeCells[^>]*>([\s\S]*?)<\/mergeCells>/.exec(xml);
   if (mc) {
@@ -7695,6 +8020,19 @@ async function makeXlsxFromPalletTpl(plan, meta, filename) {
     const f = zip[name];
     let data = (f.method === 0) ? f.raw : await inflateRaw(f.raw);
     if (name === 'xl/workbook.xml') data = calcPatched(data);
+    /* CBM 列（样式52，仅明细区 L 列使用）加水平居中：模板原样式只有垂直居中，
+       数字默认靠右；2026-11-06 用户要求 CBM 列居中显示。TOTAL 行的样式 69 本身已居中。 */
+    if (name === 'xl/styles.xml') {
+      const stx = new TextDecoder().decode(data)
+        .replace(
+          '<xf numFmtId="0" fontId="8" fillId="2" borderId="17" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>',
+          '<xf numFmtId="0" fontId="8" fillId="2" borderId="17" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>'
+        );
+      /* 注意：不要对全部 alignment 注入 wrapText——模板明细样式（44~47/54）本就带 wrapText，
+         品名 \n 换行天然生效；全量注入会把表头公司抬头/地址/电话等原本不换行的样式也强制换行，
+         表头排版全乱（2026-11-13 用户反馈，已回退） */
+      data = enc.encode(stx);
+    }
     files.push({ name: name, data: data });
   }
   const bytes = await zipFiles(files);
@@ -7707,16 +8045,17 @@ async function makeXlsxFromPalletTpl(plan, meta, filename) {
 }
 window.palExport = async function () {
   const st = palState();
-  if (!st.contract) { toast('请先选择合同号', 'err'); return; }
+  if (!st.ctSel.length) { toast('请先选择合同号', 'err'); return; }
   const rows = palRows();
-  if (!rows.length) { toast('该合同号下没有品项数据 —— 先到第三部分确认', 'err'); return; }
+  if (!rows.length) { toast('所选合同下没有品项数据 —— 先到第三部分确认', 'err'); return; }
   const plan = palPlan();
   if (!plan.length) { toast('没有可导出的品项行', 'err'); return; }
   /* 总托数由明细行 F 列累加（每种托配置一行，托数相加即总托数；散装行 F 为空不占托）。
      不能用 st.pallets 过滤计数：那是全部合同的托，按合同隔离后会把其它合同的托也算进来（2026-11-05） */
   const totPallets = plan.reduce((s, v) => s + num(v.F), 0);
-  const meta = { invoice: st.contract, date: palEnDate(new Date()) };   /* 不传 totalPallets，模板里自动用 sumF 累加值 */
-  const fname = '托盘装箱单_' + st.contract + '_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+  const inv = st.ctSel.join('+');   /* 多选合同时发票号拼接，如 PI2026150+PI2026200 */
+  const meta = { invoice: inv, date: palEnDate(new Date()) };   /* 不传 totalPallets，模板里自动用 sumF 累加值 */
+  const fname = '托盘装箱单_' + inv + '_' + new Date().toISOString().slice(0, 10) + '.xlsx';
   try {
     await makeXlsxFromPalletTpl(plan, meta, fname);
     const totCtn = plan.reduce((s, v) => s + num(v.H), 0);
@@ -7731,7 +8070,41 @@ window.palExport = async function () {
 (function palWire() {
   const bar = $('#p4Bar');
   if (!bar) return;
-  $('#palCt').addEventListener('change', e => { palState().contract = e.target.value; renderP4(); });
+  $('#palCt').addEventListener('click', e => {
+    /* 合同多选下拉：按钮开合面板；行点击勾选/取消（至少留1）；全选行一键切换（2026-11-13） */
+    const st = palState();
+    if (e.target.closest('#palCtBtn')) {
+      window._palCtOpen = !window._palCtOpen;
+      renderP4();
+      return;
+    }
+    if (e.target.closest('[data-ctall]')) {
+      const cts = contractGroups().map(g => g.name);
+      st.ctSel = st.ctSel.length === cts.length ? [cts[0]] : cts.slice();   /* 已全选→只保留第一个；否则全选 */
+      st.contract = st.ctSel[0] || '';
+      persist(); renderP4();
+      return;
+    }
+    const chip = e.target.closest('[data-ct]');
+    if (!chip) return;
+    const c = chip.dataset.ct;
+    const i = st.ctSel.indexOf(c);
+    if (i >= 0) {
+      if (st.ctSel.length <= 1) { toast('至少保留一个合同'); return; }
+      st.ctSel.splice(i, 1);
+    } else {
+      st.ctSel.push(c);
+    }
+    st.contract = st.ctSel[0] || '';
+    persist(); renderP4();
+  });
+  /* 点面板外面自动收起 */
+  document.addEventListener('click', e => {
+    if (window._palCtOpen && !e.target.closest('#palCtDrop')) {
+      window._palCtOpen = false;
+      renderP4();
+    }
+  });
   $('#palAdd').onclick = window.palAddPallet;
   $('#palClear').onclick = window.palClearAll;
   $('#palExport').onclick = window.palExport;
