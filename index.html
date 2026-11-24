@@ -5872,6 +5872,8 @@ function render3() {
        第一部分单据上的原数在「平衡核验」那一列里看得到 */
     '<th class="calc" style="min-width:62px" title="取自第二部分（仓库实测）">整箱数</th>' +
     '<th class="calc" style="min-width:66px" title="取自第二部分（仓库实测）">单箱装量</th>' +
+    '<th class="calc" style="min-width:62px" title="取自第二部分（仓库实测）：组合2（如 4件*3500+2件*3000 的 2箱×3000装）的整箱箱数">组合2整箱数</th>' +
+    '<th class="calc" style="min-width:66px" title="取自第二部分（仓库实测）：组合2每箱装量">组合2装量</th>' +
     '<th class="calc" style="min-width:62px" title="取自第二部分（仓库实测）">尾箱数</th>' +
     '<th class="calc" style="min-width:66px" title="取自第二部分（仓库实测）">尾箱装量</th>' +
     '<th class="calc sumc" style="min-width:70px" title="取自第二部分（仓库实测）">总件数(箱)</th>' +
@@ -5924,7 +5926,7 @@ function render3() {
       // 1. 产品分组分隔条（整行跨列嵌入同一表格中，彻底消除多重表头与眼花问题）
       const curProdEn = (prows[0] && prows[0].prod_en) ? prows[0].prod_en : '';
       tbodyHtml += '<tr class="p3prod-row" data-contract="' + esc(g.name) + '" data-prod="' + esc(p) + '">' +
-        '<td colspan="28">' +
+        '<td colspan="30">' +
           '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">' +
             '<span class="p3prod-badge">📦 产品 ' + esc(pno) + '</span>' +
             '<span class="p3prod-title">' + esc(p) + '</span>' +
@@ -5960,6 +5962,8 @@ function render3() {
           cells('<b>' + esc(c.range || '') + '</b>') +
           cells('<b>' + fmt0(c.full) + '</b>') +
           cells(has(r.pcs) ? fmt0(num(r.pcs)) : '') +
+          cells('<b>' + fmt0(c.full2) + '</b>') +
+          cells(has(r.pcs2) ? fmt0(num(r.pcs2)) : '') +
           cells('<b>' + fmt0(c.tail) + '</b>') +
           cells(has(r.tpcs) ? fmt0(num(r.tpcs)) : '') +
           cells('<b>' + fmt0(c.ctns) + '</b>') +
@@ -5992,7 +5996,7 @@ function render3() {
       '<td></td><td></td><td></td><td></td>' +
       '<td class="cellc" style="color:#0f7a45;font-weight:800;font-size:13px">' + fmt0(t.ctns) + '</td>' +
       '<td class="cellc" style="color:#0f7a45;font-weight:800;font-size:13px">' + fmt0(t.qty) + '</td>' +
-      '<td colspan="13"></td>' +
+      '<td colspan="15"></td>' +
       '<td class="cellc" style="color:#0f7a45;font-weight:800">' + fmt3(t.cbm) + '</td>' +
       '<td class="cellc" style="color:#0f7a45;font-weight:800">' + fmt2(t.nw) + '</td>' +
       '<td class="cellc" style="color:#0f7a45;font-weight:800">' + fmt2(t.gw) + '</td>' +
@@ -7183,9 +7187,10 @@ function renderPlPreview() {
     ? ('已选 ' + S.p3Sel.length + '/' + all + ' 个合同：' + S.p3Sel.join('、'))
     : ('全部 ' + all + ' 个合同');
   const kwTxt = (S.p3Search || '').trim() ? ' · 关键字「' + S.p3Search.trim() + '」' : '';
-  /* 客户名称（2026-11-23，同日放宽）：多个合同可能是同一个客户——只要勾选了合同（≥1 个）都可编辑，
-     输入的内容同时保存到所有勾选的合同；未勾选（=全部合同）时禁用，避免污染所有合同 */
-  const scopeCts = (S.p3Sel && S.p3Sel.length) ? S.p3Sel : [];
+  /* 客户名称（2026-11-23，同日放宽；2026-11-24 再放宽）：多个合同可能是同一个客户——
+     勾选了合同（≥1 个）都可编辑；未勾选（=全部合同）时，若当前筛选实际只涉及 1 个合同，
+     也启用并保存到该合同（单合同没有污染风险）；涉及多个合同时仍禁用，避免污染所有合同 */
+  const scopeCts = (S.p3Sel && S.p3Sel.length) ? S.p3Sel : (listCts.length === 1 ? listCts : []);
   const custVals = scopeCts.map(c => (S.p3Cust && S.p3Cust[c]) || '').filter(v => v);
   const custName = custVals.length ? custVals[0] : '';
   const custMixed = custVals.length > 1 && custVals.some(v => v !== custName);   /* 各合同存的值不一致 */
@@ -7204,7 +7209,9 @@ function renderPlPreview() {
     } else {
       custInp.disabled = true;
       custInp.value = '';
-      custInp.placeholder = '请在合同筛选勾选合同后填写（可多选同一客户的合同）';
+      custInp.placeholder = listCts.length > 1
+        ? '当前筛选涉及 ' + listCts.length + ' 个合同——请先在「合同筛选」勾选合同后填写'
+        : '请先在「合同筛选」勾选合同后填写（可多选同一客户的合同）';
     }
   }
   $('#plScope').textContent = '（' + selTxt + kwTxt + ' · ' + list.length + ' 个配件 / ' + nRows + ' 行 · 尾箱行 ' + nTail + '）';
@@ -7239,8 +7246,13 @@ function renderPlPreview() {
    只原地改单元格不整表重渲染，避免输入框失焦。 */
 if ($('#plCust')) {
   $('#plCust').addEventListener('input', () => {
-    /* 勾选了几个合同就同时保存到几个合同（多合同同一客户场景）；未勾选（全部）不动 */
-    const scopeCts = (S.p3Sel && S.p3Sel.length) ? S.p3Sel : [];
+    /* 勾选了几个合同就同时保存到几个合同；未勾选但筛选只涉及 1 个合同时保存到该合同（2026-11-24 放宽） */
+    let scopeCts = (S.p3Sel && S.p3Sel.length) ? S.p3Sel : [];
+    if (!scopeCts.length) {
+      const cts = [];
+      p3Rows().forEach(r => { const c = contractOf(r); if (c && cts.indexOf(c) < 0) cts.push(c); });
+      if (cts.length === 1) scopeCts = cts;
+    }
     if (!scopeCts.length) return;
     S.p3Cust = S.p3Cust || {};
     const v = $('#plCust').value.trim();
